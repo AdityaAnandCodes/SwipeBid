@@ -16,13 +16,13 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="border-white border-t-2 border-dashed text-zinc-200 py-16">
+    <footer className="border-white border-t-2 border-dashed text-zinc-200 py-16 bg-gradient-to-b from-transparent to-gray-900">
       <div className="max-w-7xl mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Brand Section */}
           <div className="space-y-4">
             <h3 className="text-2xl font-bold flex items-center gap-2">
-              SwipeBid <Heart size={20} className="text-red-500" />
+              SwipeBid <Heart size={20} className="text-yellow-300" />
             </h3>
             <p className="text-zinc-400">
               Discover unique digital art through our innovative swipe-based NFT marketplace.
@@ -64,9 +64,9 @@ const Footer = () => {
               <input 
                 type="email" 
                 placeholder="Enter your email" 
-                className="bg-zinc-800 px-4 py-2 rounded-lg flex-grow focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="bg-zinc-800 px-4 py-2 rounded-lg flex-grow focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
-              <button className="bg-purple-600 px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+              <button className="bg-emerald-500 px-4 py-2 rounded-lg hover:bg-emerald-500/80 transition-colors">
                 Subscribe
               </button>
             </div>
@@ -76,7 +76,7 @@ const Footer = () => {
         {/* Bottom Section */}
         <div className="mt-12 pt-8 border-t border-zinc-800 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-zinc-400 text-sm">
-            © 2025 SwipeNFT. All rights reserved.
+            © 2025 SwipeBid. All rights reserved.
           </p>
           
           <div className="flex gap-6">

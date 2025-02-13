@@ -6,7 +6,7 @@ import {
   ArrowRight,
   Star,
   CircleDollarSign,
-  SwissFrancIcon
+  Palette
 } from 'lucide-react';
 
 const CTASection = () => {
@@ -14,71 +14,83 @@ const CTASection = () => {
     <div className="py-24 relative">
       <div className="max-w-6xl mx-auto px-4">
         <div className="text-center mb-16 relative">
-          <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-4 py-2 mb-6">
-            <Sparkles className="w-4 h-4 text-emerald-400" />
-            <span className="text-sm font-medium text-emerald-400">New Way to Collect NFTs</span>
+          <div className="inline-flex items-center gap-2 bg-yellow-300/90 backdrop-blur-sm rounded-full 
+          px-4 py-2 mb-6 shadow-lg shadow-yellow-400/20">
+            <Sparkles className="w-4 h-4 text-gray-900" />
+            <span className="text-sm font-medium text-gray-900">New Way to Create & Trade NFTs</span>
           </div>
           
-          <h2 className="text-5xl font-bold text-white mb-6">
-            Discover and Collect
-            <span className="bg-gradient-to-r from-emerald-400 to-blue-500 bg-clip-text text-transparent"> Rare NFTs</span>
+          <h2 className="text-5xl font-serif font-light text-white mb-6">
+            Create, Discover and Collect
+            <span className="text-yellow-300"> Digital Art</span>
           </h2>
-          <p className="text-xl text-zinc-400 max-w-2xl mx-auto">
-            Experience the future of NFT collecting with our innovative swipe-based marketplace
+          <p className="text-lg text-gray-400 max-w-2xl mx-auto">
+            Join our community of artists and collectors in the most intuitive NFT marketplace
           </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 mb-16">
-          <div className="group border border-white/10 rounded-2xl p-8 hover:border-emerald-400/50 transition-all">
+          <div className="group border border-white/10 rounded-2xl p-8 hover:border-yellow-300/50 
+          transition-all backdrop-blur-sm bg-gray-800/30">
             <div className="flex items-center gap-4 mb-6">
-              <div className="p-4 rounded-xl bg-white/5 group-hover:bg-emerald-400/10 transition-colors">
-                <SwissFrancIcon className="w-8 h-8 text-emerald-400" />
+              <div className="p-4 rounded-xl bg-white/5 group-hover:bg-yellow-300/10 transition-colors">
+                <Palette className="w-8 h-8 text-yellow-300" />
               </div>
-              <Star className="w-5 h-5 text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <Star className="w-5 h-5 text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
-            <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-emerald-400 transition-colors">
-              Swipe & Discover
+            <h3 className="text-xl font-medium text-white mb-3 group-hover:text-yellow-300 transition-colors">
+              Create & Sell
             </h3>
-            <p className="text-zinc-400">
-              Find your next digital masterpiece with a simple swipe. Our curated collection ensures quality and authenticity.
+            <p className="text-gray-400">
+              Turn your digital creations into NFTs and showcase them to collectors worldwide.
             </p>
           </div>
 
-          <div className="group border border-white/10 rounded-2xl p-8 hover:border-emerald-400/50 transition-all">
+          <div className="group border border-white/10 rounded-2xl p-8 hover:border-yellow-300/50 
+          transition-all backdrop-blur-sm bg-gray-800/30">
             <div className="flex items-center gap-4 mb-6">
-              <div className="p-4 rounded-xl bg-white/5 group-hover:bg-emerald-400/10 transition-colors">
-                <CircleDollarSign className="w-8 h-8 text-emerald-400" />
+              <div className="p-4 rounded-xl bg-white/5 group-hover:bg-yellow-300/10 transition-colors">
+                <CircleDollarSign className="w-8 h-8 text-yellow-300" />
               </div>
-              <Star className="w-5 h-5 text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <Star className="w-5 h-5 text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
-            <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-emerald-400 transition-colors">
-              Instant Bidding
+            <h3 className="text-xl font-medium text-white mb-3 group-hover:text-yellow-300 transition-colors">
+              Instant Trading
             </h3>
-            <p className="text-zinc-400">
-              Place bids instantly with a swipe right. Get notified immediately when your bid is accepted.
+            <p className="text-gray-400">
+              Buy, sell, and bid on NFTs with a simple swipe. Get instant notifications for all activities.
             </p>
           </div>
 
-          <div className="group border border-white/10 rounded-2xl p-8 hover:border-emerald-400/50 transition-all">
+          <div className="group border border-white/10 rounded-2xl p-8 hover:border-yellow-300/50 
+          transition-all backdrop-blur-sm bg-gray-800/30">
             <div className="flex items-center gap-4 mb-6">
-              <div className="p-4 rounded-xl bg-white/5 group-hover:bg-emerald-400/10 transition-colors">
-                <Trophy className="w-8 h-8 text-emerald-400" />
+              <div className="p-4 rounded-xl bg-white/5 group-hover:bg-yellow-300/10 transition-colors">
+                <Trophy className="w-8 h-8 text-yellow-300" />
               </div>
-              <Star className="w-5 h-5 text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <Star className="w-5 h-5 text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
-            <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-emerald-400 transition-colors">
-              Win Unique Pieces
+            <h3 className="text-xl font-medium text-white mb-3 group-hover:text-yellow-300 transition-colors">
+              Build Your Collection
             </h3>
-            <p className="text-zinc-400">
-              Each NFT is verified on the blockchain. Build a collection that stands out in the digital art world.
+            <p className="text-gray-400">
+              Collect unique, verified NFTs from top artists and establish your digital art portfolio.
             </p>
           </div>
         </div>
 
-        <div className="text-center">
-          <button className="group relative inline-flex items-center gap-2 bg-emerald-400 hover:bg-emerald-500 text-zinc-900 px-8 py-4 rounded-full font-semibold text-lg transition-all overflow-hidden">
-            <span>Start Collecting Now</span>
-            <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+        <div className="text-center flex gap-4 justify-center">
+          <button className="group bg-yellow-300 text-gray-900 font-medium py-3 px-8 rounded-full 
+          hover:bg-yellow-400 transition-all duration-300 flex items-center gap-2 shadow-lg 
+          hover:shadow-yellow-400/20">
+            <span>Start Creating</span>
+            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </button>
+          <button className="group bg-gray-800 text-yellow-300 font-medium py-3 px-8 rounded-full 
+          hover:bg-gray-700 transition-all duration-300 flex items-center gap-2 shadow-lg 
+          hover:shadow-yellow-400/10">
+            <span>Start Collecting</span>
+            <Wallet className="w-4 h-4 group-hover:rotate-12 transition-transform" />
           </button>
         </div>
       </div>
