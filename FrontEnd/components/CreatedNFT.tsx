@@ -1,5 +1,6 @@
 import React from 'react';
 import { Sparkles, Upload, Tag, Wallet, Plus, Image as ImageIcon, ListPlus, Info } from 'lucide-react';
+import NFTCollections from '@/lib/constant';
 
 const CreateNFTTutorial = () => {
   return (

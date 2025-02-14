@@ -4,12 +4,12 @@ const NFTCollections = [{
     "id": 1,
     "title": "The First Collection",
     "description": "This is the first collection of NFTs",
-    "image": "/HeroNFTs/Bored_Apes.jpg",
+    "image": "/HeroNFTs/3D_Militia.jpg",
 },
 {"id": 2,
     "title": "The First Collection",
     "description": "This is the first collection of NFTs",
-    "image": "/HeroNFTs/Crying.jpg", },
+    "image": "/HeroNFTs/CyberCity.jpg", },
 {
     "id": 3,
     "title": "The First Collection",
@@ -61,7 +61,7 @@ const Hero = () => {
         
         <div className="w-full flex justify-center gap-8">
             {NFTCollections.map((collection)=>(
-                <img className="rounded-2xl object-cover w-64" key={collection.id} src={collection.image}  alt="Nft collection" />
+                <img className="rounded-2xl object-cover h-80 w-72" key={collection.id} src={collection.image}  alt="Nft collection" />
             ))}
         </div>
         </div>
