@@ -8,14 +8,21 @@ const Iphone = () => {
   const allNFTs = NFTCollections.reduce((acc: any[], collection) => 
     [...acc, ...collection.nfts], [] as any[]
   );
-
-  // State to keep track of available and seen NFTs
-  const [availableNFTs, setAvailableNFTs] = useState(() => [...allNFTs]);
+// Use null as initial state
+  const [currentNFT, setCurrentNFT] = useState<any>(null);
+  const [availableNFTs, setAvailableNFTs] = useState<any[]>([]);
   const [seenNFTs, setSeenNFTs] = useState<any[]>([]);
-  const [currentNFT, setCurrentNFT] = useState(() => {
+
+  // Initialize state on the client side only
+  useEffect(() => {
+    const initialAvailableNFTs = [...allNFTs];
     const randomIndex = Math.floor(Math.random() * allNFTs.length);
-    return allNFTs[randomIndex];
-  });
+    const initialNFT = allNFTs[randomIndex];
+    
+    setAvailableNFTs(initialAvailableNFTs.filter((_, index) => index !== randomIndex));
+    setSeenNFTs([initialNFT]);
+    setCurrentNFT(initialNFT);
+  }, []);
 
   const [swipeStart, setSwipeStart] = useState<number | null>(null);
   const [swipeOffset, setSwipeOffset] = useState(0);
@@ -28,7 +35,7 @@ const Iphone = () => {
   const lastTimeRef = useRef(0);
 
   // Function to get next random NFT
-  const getNextNFT = () => {
+   const getNextNFT = () => {
     if (availableNFTs.length === 0) {
       // If all NFTs have been seen, reset the pool
       setAvailableNFTs([...allNFTs]);
@@ -162,6 +169,20 @@ const Iphone = () => {
       opacity: Math.max(0, 1 - Math.abs(swipeOffset) / 300)
     };
   };
+  if (!currentNFT) {
+    return (
+      <div className="iPhoneFrame bg-sky-300 rounded-xl h-[600px] w-80 p-[3px] px-1 overflow-hidden select-none">
+        <div className="h-full w-full bg-zinc-950 rounded-xl overflow-hidden relative select-none">
+          <div className="absolute w-24 h-6 rounded-full bg-zinc-950 top-2 z-10 left-1/2 -translate-x-1/2 flex justify-end items-center p-2">
+            <div className="w-2 h-2 rounded-full bg-zinc-800 flex justify-center items-center"></div>
+          </div>
+          <div className="flex items-center justify-center h-full">
+            <div className="text-white">Loading...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="iPhoneFrame bg-sky-300 rounded-xl h-[600px] w-80 p-[3px] px-1 overflow-hidden select-none">
