@@ -163,7 +163,7 @@ export default function CreateNFTPage() {
         }
 
         // Update collections state
-        const updatedCollections = collections.map(c => {
+        const updatedCollections : any = collections.map(c => {
           if (c.id === data.collection) {
             return { ...c, nfts: [...c.nfts, newNFT] }
           }
