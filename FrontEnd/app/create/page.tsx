@@ -1,66 +1,297 @@
-"use client"
+"use client";
 
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useDropzone } from 'react-dropzone'
-import { z } from 'zod'
-import toast from 'react-hot-toast'
-import { Sparkles, ImageIcon, Loader2, Wallet } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useDropzone } from "react-dropzone";
+import { z } from "zod";
+import toast from "react-hot-toast";
+import { Sparkles, ImageIcon, Loader2, Wallet } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { ethers } from "ethers";
+import { ADDRESS, ABI } from "@/lib/constant_contracts";
 
 const createNFTSchema = z.object({
-  title: z.string().min(3, 'Title must be at least 3 characters'),
-  description: z.string().min(10, 'Description must be at least 10 characters'),
+  title: z.string().min(3, "Title must be at least 3 characters"),
+  description: z.string().min(10, "Description must be at least 10 characters"),
   traits: z.string().optional(),
-  price: z.string().regex(/^\d*\.?\d*$/, 'Must be a valid number'),
-})
+  price: z.string().regex(/^\d*\.?\d*$/, "Must be a valid number"),
+});
 
-type FormValues = z.infer<typeof createNFTSchema>
+type FormValues = z.infer<typeof createNFTSchema>;
 
-export default function CreateNFTPage() {
-  const [file, setFile] = useState<File | null>(null)
-  const [filePreview, setFilePreview] = useState<string | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+interface FormDataType {
+  name: string;
+  description: string;
+  traits: string[];
+  basePrice: string;
+  image: File | null;
+}
 
+interface PinataResponse {
+  IpfsHash: string;
+  PinSize: number;
+  Timestamp: string;
+}
+
+interface UploadResult {
+  ipfsUrl: string;
+  gatewayUrl: string;
+}
+
+interface CreateNFTTutorialProps {
+  address?: string;
+  abi?: any[];
+}
+
+export default function CreateNFTPage({
+  address = ADDRESS,
+  abi = ABI,
+}: CreateNFTTutorialProps) {
+  const [file, setFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState<FormDataType>({
+    name: "",
+    description: "",
+    traits: [""],
+    basePrice: "",
+    image: null,
+  });
   const {
     register,
-    handleSubmit,
     formState: { errors },
     watch,
   } = useForm<FormValues>({
     resolver: zodResolver(createNFTSchema),
-  })
+  });
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
-      'image/*': ['.png', '.jpg', '.jpeg', '.gif']
+      "image/*": [".png", ".jpg", ".jpeg", ".gif"],
     },
     maxSize: 50 * 1024 * 1024,
     onDrop: (acceptedFiles) => {
-      const file = acceptedFiles[0]
-      setFile(file)
-      setFilePreview(URL.createObjectURL(file))
+      const file = acceptedFiles[0];
+      setFile(file);
+      setFilePreview(URL.createObjectURL(file));
     },
-  })
+  });
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
+  const [success, setSuccess] = useState<boolean>(false);
+  const [userAddress, setUserAddress] = useState<string>("");
 
-  const onSubmit = async (data: FormValues) => {
-    if (!file) {
-      toast.error('Please upload an image')
-      return
-    }
+  useEffect(() => {
+    const getAddress = async (): Promise<void> => {
+      if (window.ethereum) {
+        try {
+          const provider = new ethers.BrowserProvider(window.ethereum);
+          const signer = await provider.getSigner();
+          const address = await signer.getAddress();
+          setUserAddress(address);
+        } catch (err: unknown) {
+          console.error("Error getting address:", err);
+        }
+      }
+    };
 
-    setIsSubmitting(true)
-    
+    getAddress();
+  }, []);
+
+  const uploadToPinata = async (file: File): Promise<UploadResult> => {
     try {
-      // Simulate NFT creation
-      toast.success('NFT created successfully!')
-    } catch (error) {
-      toast.error('Failed to create NFT')
-    } finally {
-      setIsSubmitting(false)
+      const formDataObj = new FormData();
+      formDataObj.append("file", file);
+
+      const pinataMetadata = JSON.stringify({
+        name: formData.name || "NFT Image",
+      });
+      formDataObj.append("pinataMetadata", pinataMetadata);
+
+      const pinataOptions = JSON.stringify({
+        cidVersion: 1,
+      });
+      formDataObj.append("pinataOptions", pinataOptions);
+
+      const res = await fetch(
+        "https://api.pinata.cloud/pinning/pinFileToIPFS",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_PINATA_JWT}`,
+          },
+          body: formDataObj,
+        }
+      );
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(
+          errorData.error?.details || "Failed to upload to Pinata"
+        );
+      }
+
+      const data = (await res.json()) as PinataResponse;
+      return {
+        ipfsUrl: `ipfs://${data.IpfsHash}`,
+        gatewayUrl: `https://aqua-rare-worm-454.mypinata.cloud/ipfs/${data.IpfsHash}`,
+      };
+    } catch (err: unknown) {
+      console.error("Pinata upload error:", err);
+      throw new Error(
+        `Failed to upload image to Pinata: ${
+          err instanceof Error ? err.message : "Unknown error"
+        }`
+      );
     }
+  };
+
+  interface NFTMetadata {
+    name: string;
+    description: string;
+    image: string;
+    attributes: Array<{
+      trait_type: string;
+      value: string;
+    }>;
   }
+
+  const uploadMetadataToPinata = async (
+    metadata: NFTMetadata
+  ): Promise<UploadResult> => {
+    try {
+      const res = await fetch(
+        "https://api.pinata.cloud/pinning/pinJSONToIPFS",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_PINATA_JWT}`,
+          },
+          body: JSON.stringify(metadata),
+        }
+      );
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(
+          errorData.error?.details || "Failed to upload metadata to Pinata"
+        );
+      }
+
+      const data = (await res.json()) as PinataResponse;
+      return {
+        ipfsUrl: `ipfs://${data.IpfsHash}`,
+        gatewayUrl: `https://aqua-rare-worm-454.mypinata.cloud/ipfs/${data.IpfsHash}`,
+      };
+    } catch (err: unknown) {
+      console.error("Pinata metadata upload error:", err);
+      throw new Error(
+        `Failed to upload metadata to Pinata: ${
+          err instanceof Error ? err.message : "Unknown error"
+        }`
+      );
+    }
+  };
+
+  const handleSubmit = async (e: FormEvent): Promise<void> => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    setSuccess(false);
+
+    try {
+      if (!window.ethereum) {
+        throw new Error("MetaMask is not installed");
+      }
+
+      if (!formData.image) {
+        throw new Error("Please select an image file");
+      }
+
+      // 1. Upload image to IPFS
+      console.log("Uploading image to Pinata...");
+      const imageUrls = await uploadToPinata(formData.image);
+      console.log("Image uploaded:", imageUrls);
+
+      // 2. Create metadata
+      const metadata: NFTMetadata = {
+        name: formData.name,
+        description: formData.description,
+        image: imageUrls.ipfsUrl, // Use IPFS URL in metadata
+        attributes: [
+          {
+            trait_type: "Category",
+            value: formData.traits[0],
+          },
+        ],
+      };
+
+      // 3. Upload metadata to IPFS
+      console.log("Uploading metadata to Pinata...");
+      const metadataUrls = await uploadMetadataToPinata(metadata);
+      console.log("Metadata uploaded:", metadataUrls);
+
+      // 4. Create contract instance
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(address, abi, signer);
+
+      // 5. Create NFT on blockchain - Use metadataUrl instead of imageUrl
+      const priceInWei = ethers.parseEther(formData.basePrice);
+      const tx = await contract.createNFT(
+        formData.name,
+        formData.description,
+        metadataUrls.ipfsUrl, // Changed: Use metadata URI instead of image URI
+        formData.traits,
+        priceInWei
+      );
+
+      await tx.wait();
+      setSuccess(true);
+
+      // Reset form
+      setFormData({
+        name: "",
+        description: "",
+        traits: [""],
+        basePrice: "",
+        image: null,
+      });
+    } catch (err: unknown) {
+      console.error("Form submission error:", err);
+      setError(
+        err instanceof Error ? err.message : "An unknown error occurred"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>): void => {
+    if (e.target.files && e.target.files.length > 0) {
+      setFormData({ ...formData, image: e.target.files[0] });
+    }
+  };
+
+  // const onSubmit = async (data: FormValues) => {
+  //   if (!file) {
+  //     toast.error("Please upload an image");
+  //     return;
+  //   }
+
+  //   setIsSubmitting(true);
+
+  //   try {
+  //     // Simulate NFT creation
+  //     toast.success("NFT created successfully!");
+  //   } catch (error) {
+  //     toast.error("Failed to create NFT");
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-zinc-900 to-black">
@@ -75,7 +306,8 @@ export default function CreateNFTPage() {
             Turn Your Art Into NFTs
           </h1>
           <p className="text-gray-400 max-w-xl mx-auto">
-            Create and showcase your digital creations. Set your price and let the world discover your art.
+            Create and showcase your digital creations. Set your price and let
+            the world discover your art.
           </p>
         </div>
 
@@ -83,7 +315,7 @@ export default function CreateNFTPage() {
           {/* Left Column - Form */}
           <div className="col-span-8">
             <div className="bg-white/5 rounded-2xl p-8 backdrop-blur-sm">
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+              <form onSubmit={handleSubmit} className="space-y-8">
                 {/* File Upload Section */}
                 <div>
                   <div
@@ -94,7 +326,20 @@ export default function CreateNFTPage() {
                       isDragActive && "border-emerald-500/50 bg-emerald-500/5"
                     )}
                   >
-                    <input {...getInputProps()} />
+                    <input
+                      {...getInputProps()}
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files.length > 0) {
+                          const selectedFile = e.target.files[0];
+                          setFile(selectedFile);
+                          setFilePreview(URL.createObjectURL(selectedFile));
+                          setFormData((prev) => ({
+                            ...prev,
+                            image: selectedFile,
+                          }));
+                        }
+                      }}
+                    />
                     {filePreview ? (
                       <div className="space-y-4">
                         <div className="aspect-square w-48 mx-auto rounded-lg overflow-hidden bg-white/5">
@@ -107,9 +352,10 @@ export default function CreateNFTPage() {
                         <button
                           type="button"
                           onClick={(e) => {
-                            e.stopPropagation()
-                            setFile(null)
-                            setFilePreview(null)
+                            e.stopPropagation();
+                            setFile(null);
+                            setFilePreview(null);
+                            setFormData((prev) => ({ ...prev, image: null }));
                           }}
                           className="text-sm text-red-400 hover:text-red-300"
                         >
@@ -134,34 +380,52 @@ export default function CreateNFTPage() {
 
                 {/* Title Field */}
                 <div>
-                  <label className="text-sm text-gray-400 mb-2 block">Title</label>
+                  <label className="text-sm text-gray-400 mb-2 block">
+                    Title
+                  </label>
                   <input
-                    {...register('title')}
+                    id="name"
+                    value={formData.name}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
                     className={cn(
                       "w-full bg-white/5 border border-white/10 rounded-lg p-3",
                       "text-white placeholder-gray-500 focus:outline-none focus:border-white/20"
                     )}
                     placeholder="Give your NFT a name"
+                    required
                   />
                   {errors.title && (
-                    <p className="mt-1 text-sm text-red-400">{errors.title.message}</p>
+                    <p className="mt-1 text-sm text-red-400">
+                      {errors.title.message}
+                    </p>
                   )}
                 </div>
 
                 {/* Description Field */}
                 <div>
-                  <label className="text-sm text-gray-400 mb-2 block">Description</label>
+                  <label className="text-sm text-gray-400 mb-2 block">
+                    Description
+                  </label>
                   <textarea
-                    {...register('description')}
+                    id="description"
+                    value={formData.description}
+                    onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
                     className={cn(
                       "w-full bg-white/5 border border-white/10 rounded-lg p-3",
                       "text-white placeholder-gray-500 focus:outline-none focus:border-white/20",
                       "resize-none h-24"
                     )}
                     placeholder="Tell the story behind your creation"
+                    required
                   />
                   {errors.description && (
-                    <p className="mt-1 text-sm text-red-400">{errors.description.message}</p>
+                    <p className="mt-1 text-sm text-red-400">
+                      {errors.description.message}
+                    </p>
                   )}
                 </div>
 
@@ -171,12 +435,22 @@ export default function CreateNFTPage() {
                     Traits (format: key:value, separated by commas)
                   </label>
                   <input
-                    {...register('traits')}
+                    id="traits"
+                    value={formData.traits.join(", ")} // Join array elements into a comma-separated string
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      setFormData({
+                        ...formData,
+                        traits: e.target.value
+                          .split(",")
+                          .map((trait) => trait.trim()), // Convert input back to an array
+                      })
+                    }
                     className={cn(
                       "w-full bg-white/5 border border-white/10 rounded-lg p-3",
                       "text-white placeholder-gray-500 focus:outline-none focus:border-white/20"
                     )}
                     placeholder="e.g. background:red, rarity:legendary, type:weapon"
+                    required
                   />
                   <p className="mt-1 text-xs text-gray-500">
                     Example: background:red, rarity:legendary, type:weapon
@@ -185,22 +459,30 @@ export default function CreateNFTPage() {
 
                 {/* Price Field */}
                 <div>
-                  <label className="text-sm text-gray-400 mb-2 block">Price (ETH)</label>
+                  <label className="text-sm text-gray-400 mb-2 block">
+                    Price (ETH)
+                  </label>
                   <div className="relative">
                     <input
-                      {...register('price')}
+                      id="basePrice"
+                      type="number"
+                      step="0.01"
+                      value={formData.basePrice}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                        setFormData({ ...formData, basePrice: e.target.value })
+                      }
                       className={cn(
                         "w-full bg-white/5 border border-white/10 rounded-lg p-3",
                         "text-white placeholder-gray-500 focus:outline-none focus:border-white/20",
                         "pr-12"
                       )}
                       placeholder="0.00"
+                      required
                     />
-                    <span className="absolute right-3 top-3 text-gray-500">ETH</span>
+                    <span className="absolute right-3 top-3 text-gray-500">
+                      ETH
+                    </span>
                   </div>
-                  {errors.price && (
-                    <p className="mt-1 text-sm text-red-400">{errors.price.message}</p>
-                  )}
                 </div>
 
                 {/* Submit Button */}
@@ -220,7 +502,7 @@ export default function CreateNFTPage() {
                       Creating...
                     </>
                   ) : (
-                    'Create NFT'
+                    "Create NFT"
                   )}
                 </button>
 
@@ -237,7 +519,9 @@ export default function CreateNFTPage() {
           <div className="col-span-4">
             <div className="sticky top-4">
               <div className="bg-white/5 rounded-2xl p-6 backdrop-blur-sm">
-                <h3 className="text-lg font-medium text-white mb-4">Live Preview</h3>
+                <h3 className="text-lg font-medium text-white mb-4">
+                  Live Preview
+                </h3>
                 {filePreview ? (
                   <div className="aspect-square rounded-xl overflow-hidden bg-white/5 mb-4">
                     <img
@@ -253,26 +537,31 @@ export default function CreateNFTPage() {
                 )}
                 <div className="space-y-4 mt-4">
                   <div>
-                    <h4 className="text-white text-lg font-medium">{watch('title') || 'NFT Title'}</h4>
+                    <h4 className="text-white text-lg font-medium">
+                      {watch("title") || "NFT Title"}
+                    </h4>
                     <p className="text-gray-400 text-sm mt-1">
-                      {watch('description') || 'NFT description will appear here'}
+                      {watch("description") ||
+                        "NFT description will appear here"}
                     </p>
                   </div>
-                  {watch('traits') && (
+                  {watch("traits") && (
                     <div>
                       <h5 className="text-sm text-gray-400 mb-2">Traits</h5>
                       <div className="flex flex-wrap gap-2">
-                        {watch('traits')?.split(',').map((trait, index) => {
-                          const [key, value] = trait.trim().split(':');
-                          return key && value ? (
-                            <span
-                              key={index}
-                              className="px-2 py-1 bg-white/10 rounded-full text-xs text-white"
-                            >
-                              {key}: {value}
-                            </span>
-                          ) : null;
-                        })}
+                        {watch("traits")
+                          ?.split(",")
+                          .map((trait, index) => {
+                            const [key, value] = trait.trim().split(":");
+                            return key && value ? (
+                              <span
+                                key={index}
+                                className="px-2 py-1 bg-white/10 rounded-full text-xs text-white"
+                              >
+                                {key}: {value}
+                              </span>
+                            ) : null;
+                          })}
                       </div>
                     </div>
                   )}
@@ -280,7 +569,7 @@ export default function CreateNFTPage() {
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-400">Price</span>
                       <span className="text-white font-medium">
-                        {watch('price') ? `${watch('price')} ETH` : '0.00 ETH'}
+                        {watch("price") ? `${watch("price")} ETH` : "0.00 ETH"}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm mt-2">
@@ -297,5 +586,5 @@ export default function CreateNFTPage() {
         </div>
       </div>
     </main>
-  )
+  );
 }
