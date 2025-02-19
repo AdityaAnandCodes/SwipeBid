@@ -6,113 +6,28 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useDropzone } from 'react-dropzone'
 import { z } from 'zod'
 import toast from 'react-hot-toast'
-import { Transition, Dialog } from '@headlessui/react'
-import { Sparkles, Upload, Tag, Wallet, X, ImageIcon, AlertCircle, Loader2, Plus } from 'lucide-react'
+import { Sparkles, ImageIcon, Loader2, Wallet } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import NFTCollections from '@/lib/constant'
 
-// Enhanced Form Schema
 const createNFTSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters'),
   description: z.string().min(10, 'Description must be at least 10 characters'),
-  collection: z.string().min(1, 'Please select or create a collection'),
   traits: z.string().optional(),
   price: z.string().regex(/^\d*\.?\d*$/, 'Must be a valid number'),
-  royalty: z.string().regex(/^\d*\.?\d*$/, 'Must be a valid number').refine(
-    (val) => parseFloat(val) >= 0 && parseFloat(val) <= 100,
-    'Royalty must be between 0 and 100'
-  ),
 })
 
 type FormValues = z.infer<typeof createNFTSchema>
-
-// New Collection Modal Component
-const CreateCollectionModal = ({
-  isOpen,
-  onClose,
-  onCreateCollection
-}: {
-  isOpen: boolean
-  onClose: () => void
-  onCreateCollection: (collection: { id: string; title: string; description: string }) => void
-}) => {
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const id = title.toLowerCase().replace(/\s+/g, '-')
-    onCreateCollection({ id, title, description })
-    onClose()
-  }
-
-  return (
-    <Transition show={isOpen} as="div">
-      <Dialog onClose={onClose} className="relative z-50">
-        <div className="fixed inset-0 bg-black/80" />
-        <div className="fixed inset-0 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-zinc-900 p-6">
-              <Dialog.Title className="text-lg font-medium text-white mb-4">
-                Create New Collection
-              </Dialog.Title>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="text-sm text-gray-400 mb-2 block">Collection Name</label>
-                  <input
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="text-sm text-gray-400 mb-2 block">Description</label>
-                  <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white h-24"
-                    required
-                  />
-                </div>
-                <div className="flex gap-3 justify-end">
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="px-4 py-2 text-white bg-white/10 rounded-lg"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 text-white bg-emerald-500 rounded-lg"
-                  >
-                    Create Collection
-                  </button>
-                </div>
-              </form>
-            </Dialog.Panel>
-          </div>
-        </div>
-      </Dialog>
-    </Transition>
-  )
-}
 
 export default function CreateNFTPage() {
   const [file, setFile] = useState<File | null>(null)
   const [filePreview, setFilePreview] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showPreview, setShowPreview] = useState(false)
-  const [showNewCollection, setShowNewCollection] = useState(false)
-  const [collections, setCollections] = useState(NFTCollections)
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     watch,
-    setValue,
   } = useForm<FormValues>({
     resolver: zodResolver(createNFTSchema),
   })
@@ -129,51 +44,17 @@ export default function CreateNFTPage() {
     },
   })
 
-  const handleCreateCollection = (newCollection: { id: string; title: string; description: string }) => {
-    const updatedCollections = [...collections, { ...newCollection, nfts: [] }]
-    setCollections(updatedCollections)
-    setValue('collection', newCollection.id)
-  }
-
   const onSubmit = async (data: FormValues) => {
     if (!file) {
-      toast.error('Please upload an image for your NFT')
+      toast.error('Please upload an image')
       return
     }
 
     setIsSubmitting(true)
     
     try {
-      // Add the new NFT to the selected collection
-      const selectedCollection = collections.find(c => c.id === data.collection)
-      if (selectedCollection) {
-        const newNFT = {
-          id: Date.now(),
-          name: data.title,
-          collection: selectedCollection.title,
-          owner: "0xCurrentWallet", // You would get this from your wallet connection
-          description: data.description,
-          image: filePreview, // In production, you'd upload this to IPFS or similar
-          traits: data.traits?.split(',').reduce((acc, trait) => {
-            const [key, value] = trait.split(':').map(s => s.trim())
-            return { ...acc, [key]: value }
-          }, {}),
-          price: parseFloat(data.price),
-          royalty: parseFloat(data.royalty)
-        }
-
-        // Update collections state
-        const updatedCollections : any = collections.map(c => {
-          if (c.id === data.collection) {
-            return { ...c, nfts: [...c.nfts, newNFT] }
-          }
-          return c
-        })
-        setCollections(updatedCollections)
-      }
-
+      // Simulate NFT creation
       toast.success('NFT created successfully!')
-      // Reset form or redirect
     } catch (error) {
       toast.error('Failed to create NFT')
     } finally {
@@ -194,8 +75,7 @@ export default function CreateNFTPage() {
             Turn Your Art Into NFTs
           </h1>
           <p className="text-gray-400 max-w-xl mx-auto">
-            Create, sell, and track your NFTs with ease. Set your price, 
-            royalties, and let the world discover your creations.
+            Create and showcase your digital creations. Set your price and let the world discover your art.
           </p>
         </div>
 
@@ -204,37 +84,6 @@ export default function CreateNFTPage() {
           <div className="col-span-8">
             <div className="bg-white/5 rounded-2xl p-8 backdrop-blur-sm">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-                {/* Collection Selection */}
-                <div>
-                  <label className="text-sm text-gray-400 mb-2 block">Collection</label>
-                  <div className="flex gap-3">
-                    <select
-                      {...register('collection')}
-                      className={cn(
-                        "flex-1 bg-white/5 border border-white/10 rounded-lg p-3",
-                        "text-white appearance-none"
-                      )}
-                    >
-                      <option value="">Select Collection</option>
-                      {collections.map(collection => (
-                        <option key={collection.id} value={collection.id}>
-                          {collection.title}
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      type="button"
-                      onClick={() => setShowNewCollection(true)}
-                      className="px-4 py-2 bg-white/5 rounded-lg text-white hover:bg-white/10"
-                    >
-                      <Plus className="w-5 h-5" />
-                    </button>
-                  </div>
-                  {errors.collection && (
-                    <p className="mt-1 text-sm text-red-400">{errors.collection.message}</p>
-                  )}
-                </div>
-
                 {/* File Upload Section */}
                 <div>
                   <div
@@ -334,96 +183,57 @@ export default function CreateNFTPage() {
                   </p>
                 </div>
 
-                {/* Price and Royalty Fields */}
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <label className="text-sm text-gray-400 mb-2 block">Price (ETH)</label>
-                    <div className="relative">
-                      <input
-                        {...register('price')}
-                        className={cn(
-                          "w-full bg-white/5 border border-white/10 rounded-lg p-3",
-                          "text-white placeholder-gray-500 focus:outline-none focus:border-white/20",
-                          "pr-12"
-                        )}
-                        placeholder="0.00"
-                      />
-                      <span className="absolute right-3 top-3 text-gray-500">ETH</span>
-                    </div>
-                    {errors.price && (
-                      <p className="mt-1 text-sm text-red-400">{errors.price.message}</p>
-                    )}
+                {/* Price Field */}
+                <div>
+                  <label className="text-sm text-gray-400 mb-2 block">Price (ETH)</label>
+                  <div className="relative">
+                    <input
+                      {...register('price')}
+                      className={cn(
+                        "w-full bg-white/5 border border-white/10 rounded-lg p-3",
+                        "text-white placeholder-gray-500 focus:outline-none focus:border-white/20",
+                        "pr-12"
+                      )}
+                      placeholder="0.00"
+                    />
+                    <span className="absolute right-3 top-3 text-gray-500">ETH</span>
                   </div>
-
-                  <div>
-                    <label className="text-sm text-gray-400 mb-2 block">Royalty (%)</label>
-                    <div className="relative">
-                      <input
-                        {...register('royalty')}
-                        className={cn(
-                          "w-full bg-white/5 border border-white/10 rounded-lg p-3",
-                          "text-white placeholder-gray-500 focus:outline-none focus:border-white/20",
-                          "pr-8"
-                        )}
-                        placeholder="2.5"
-                      />
-                      <span className="absolute right-3 top-3 text-gray-500">%</span>
-                    </div>
-                    {errors.royalty && (
-                      <p className="mt-1 text-sm text-red-400">{errors.royalty.message}</p>
-                    )}
-                  </div>
+                  {errors.price && (
+                    <p className="mt-1 text-sm text-red-400">{errors.price.message}</p>
+                  )}
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowPreview(true)}
-                    className={cn(
-                      "flex-1 bg-white/5 text-white p-3 rounded-lg",
-                      "hover:bg-white/10 transition-colors"
-                    )}
-                  >
-                    Preview
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className={cn(
-                      "flex-1 bg-emerald-500 text-white p-3 rounded-lg",
-                      "hover:bg-emerald-500/90 transition-colors",
-                      "disabled:opacity-50 disabled:cursor-not-allowed",
-                      "flex items-center justify-center gap-2"
-                    )}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Creating...
-                      </>
-                    ) : (
-                      'Create NFT'
-                    )}
-                  </button>
-                </div>
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={cn(
+                    "w-full bg-emerald-500 text-white p-3 rounded-lg",
+                    "hover:bg-emerald-500/90 transition-colors",
+                    "disabled:opacity-50 disabled:cursor-not-allowed",
+                    "flex items-center justify-center gap-2"
+                  )}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    'Create NFT'
+                  )}
+                </button>
 
                 {/* Info Cards */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex items-center gap-2 text-sm text-gray-500 bg-white/5 p-4 rounded-lg">
-                    <Wallet className="w-4 h-4" />
-                    <p>Payments will be sent to your connected wallet</p>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-500 bg-white/5 p-4 rounded-lg">
-                    <AlertCircle className="w-4 h-4" />
-                    <p>Gas fees apply to all transactions</p>
-                  </div>
+                <div className="flex items-center gap-2 text-sm text-gray-500 bg-white/5 p-4 rounded-lg">
+                  <Wallet className="w-4 h-4" />
+                  <p>Payments will be sent to your connected wallet</p>
                 </div>
               </form>
             </div>
           </div>
 
-          {/* Right Column - Preview */}
+          {/* Right Column - Live Preview */}
           <div className="col-span-4">
             <div className="sticky top-4">
               <div className="bg-white/5 rounded-2xl p-6 backdrop-blur-sm">
@@ -452,14 +262,17 @@ export default function CreateNFTPage() {
                     <div>
                       <h5 className="text-sm text-gray-400 mb-2">Traits</h5>
                       <div className="flex flex-wrap gap-2">
-                        {watch('traits')?.split(',').map((trait, index) => (
-                          <span
-                            key={index}
-                            className="px-2 py-1 bg-white/10 rounded-full text-xs text-white"
-                          >
-                            {trait.trim()}
-                          </span>
-                        ))}
+                        {watch('traits')?.split(',').map((trait, index) => {
+                          const [key, value] = trait.trim().split(':');
+                          return key && value ? (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-white/10 rounded-full text-xs text-white"
+                            >
+                              {key}: {value}
+                            </span>
+                          ) : null;
+                        })}
                       </div>
                     </div>
                   )}
@@ -471,9 +284,9 @@ export default function CreateNFTPage() {
                       </span>
                     </div>
                     <div className="flex justify-between text-sm mt-2">
-                      <span className="text-gray-400">Royalty</span>
-                      <span className="text-white font-medium">
-                        {watch('royalty') ? `${watch('royalty')}%` : '0%'}
+                      <span className="text-gray-400">Owner</span>
+                      <span className="text-white font-medium truncate max-w-[150px]">
+                        0xYourWalletAddress
                       </span>
                     </div>
                   </div>
@@ -483,12 +296,6 @@ export default function CreateNFTPage() {
           </div>
         </div>
       </div>
-
-      {/* Modals */}
-      <CreateCollectionModal
-        isOpen={showNewCollection}
-        onClose={() => setShowNewCollection(false)}
-        onCreateCollection={handleCreateCollection}
-      />
     </main>
-  )};
+  )
+}

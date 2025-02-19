@@ -1,14 +1,13 @@
 "use client"
 import { useState, useRef, useEffect } from 'react';
 import { Cross, HeartIcon } from 'lucide-react';
-import NFTCollections from '@/lib/constant';
+import NFTs from '@/lib/constant';
 
 const Iphone = () => {
-  // Flatten all NFTs from collections into a single array
-  const allNFTs = NFTCollections.reduce((acc: any[], collection) => 
-    [...acc, ...collection.nfts], [] as any[]
-  );
-// Use null as initial state
+  // Now NFTs is already a flattened array, so we don't need to reduce
+  const allNFTs = NFTs;
+  
+  // Use null as initial state
   const [currentNFT, setCurrentNFT] = useState<any>(null);
   const [availableNFTs, setAvailableNFTs] = useState<any[]>([]);
   const [seenNFTs, setSeenNFTs] = useState<any[]>([]);
@@ -35,7 +34,7 @@ const Iphone = () => {
   const lastTimeRef = useRef(0);
 
   // Function to get next random NFT
-   const getNextNFT = () => {
+  const getNextNFT = () => {
     if (availableNFTs.length === 0) {
       // If all NFTs have been seen, reset the pool
       setAvailableNFTs([...allNFTs]);
@@ -142,13 +141,15 @@ const Iphone = () => {
 
   const handleLike = () => {
     setSwipeOffset(300);
-    console.log('Liked:', currentNFT.name);
+    // Update to use title instead of name
+    console.log('Liked:', currentNFT.title);
     showNextNFT();
   };
 
   const handleDislike = () => {
     setSwipeOffset(-300);
-    console.log('Disliked:', currentNFT.name);
+    // Update to use title instead of name
+    console.log('Disliked:', currentNFT.title);
     showNextNFT();
   };
 
