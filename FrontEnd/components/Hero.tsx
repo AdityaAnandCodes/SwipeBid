@@ -1,4 +1,5 @@
 import { ArrowRight, Palette, Sparkles } from "lucide-react"
+import Link from "next/link"
 
 const NFTCollections = [{
     "id": 1,
@@ -45,18 +46,18 @@ const Hero = () => {
 
         {/* Action Buttons */}
         <div className="flex gap-4 flex-wrap justify-center mb-5">
-          <button className="group bg-yellow-300 text-gray-900 font-medium py-3 px-8 rounded-full 
+          <Link href="/explore" className="group bg-yellow-300 text-gray-900 font-medium py-3 px-8 rounded-full 
           hover:bg-yellow-400 transition-all duration-300 flex items-center gap-2 shadow-lg 
           hover:shadow-yellow-400/20">
             Start Exploring
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </button>
-          <button className="group bg-gray-800 text-yellow-300 font-medium py-3 px-8 rounded-full 
+          </Link>
+          <Link href="/create" className="group bg-gray-800 text-yellow-300 font-medium py-3 px-8 rounded-full 
           hover:bg-gray-700 transition-all duration-300 flex items-center gap-2 shadow-lg 
           hover:shadow-yellow-400/10">
             Create NFT
             <Palette className="w-4 h-4 group-hover:rotate-12 transition-transform" />
-          </button>
+          </Link>
         </div>
         
         <div className="w-full flex justify-center gap-8">
