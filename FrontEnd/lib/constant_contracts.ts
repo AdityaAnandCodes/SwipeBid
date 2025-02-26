@@ -1,4 +1,4 @@
-export const ADDRESS = "0x06d70e0209490C6b0FDaCCEDa2AEd10F4b72ccaE";
+export const ADDRESS = "0x6a9208c2bbb40de3e9d9dc96e4ebd9460f49126e";
 export const ABI = [
   {
     inputs: [],
@@ -257,31 +257,6 @@ export const ABI = [
       {
         indexed: false,
         internalType: "address",
-        name: "user",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "bool",
-        name: "direction",
-        type: "bool",
-      },
-    ],
-    name: "NFTSwiped",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "uint256",
-        name: "tokenId",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "address",
         name: "bidder",
         type: "address",
       },
@@ -342,6 +317,25 @@ export const ABI = [
   {
     inputs: [
       {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    name: "allTokenIds",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
         internalType: "address",
         name: "to",
         type: "address",
@@ -370,40 +364,6 @@ export const ABI = [
       {
         internalType: "uint256",
         name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    name: "bidsHistory",
-    outputs: [
-      {
-        internalType: "address",
-        name: "bidder",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "timestamp",
         type: "uint256",
       },
     ],
@@ -466,16 +426,73 @@ export const ABI = [
     inputs: [
       {
         internalType: "uint256",
-        name: "tokenId",
+        name: "start",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "count",
         type: "uint256",
       },
     ],
-    name: "getApproved",
+    name: "getActiveListings",
     outputs: [
       {
-        internalType: "address",
+        components: [
+          {
+            internalType: "uint256",
+            name: "tokenId",
+            type: "uint256",
+          },
+          {
+            internalType: "address",
+            name: "seller",
+            type: "address",
+          },
+          {
+            internalType: "string",
+            name: "name",
+            type: "string",
+          },
+          {
+            internalType: "string",
+            name: "description",
+            type: "string",
+          },
+          {
+            internalType: "string",
+            name: "imageURI",
+            type: "string",
+          },
+          {
+            internalType: "string[]",
+            name: "traits",
+            type: "string[]",
+          },
+          {
+            internalType: "uint256",
+            name: "basePrice",
+            type: "uint256",
+          },
+          {
+            internalType: "bool",
+            name: "active",
+            type: "bool",
+          },
+          {
+            internalType: "address",
+            name: "highestBidder",
+            type: "address",
+          },
+          {
+            internalType: "uint256",
+            name: "highestBid",
+            type: "uint256",
+          },
+        ],
+        internalType: "struct NFTBiddingPlatform.NFTListing[]",
         name: "",
-        type: "address",
+        type: "tuple[]",
       },
     ],
     stateMutability: "view",
@@ -489,29 +506,12 @@ export const ABI = [
         type: "uint256",
       },
     ],
-    name: "getBidsHistory",
+    name: "getApproved",
     outputs: [
       {
-        components: [
-          {
-            internalType: "address",
-            name: "bidder",
-            type: "address",
-          },
-          {
-            internalType: "uint256",
-            name: "amount",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "timestamp",
-            type: "uint256",
-          },
-        ],
-        internalType: "struct NFTBiddingPlatform.Bid[]",
+        internalType: "address",
         name: "",
-        type: "tuple[]",
+        type: "address",
       },
     ],
     stateMutability: "view",
@@ -579,16 +579,6 @@ export const ABI = [
             name: "highestBid",
             type: "uint256",
           },
-          {
-            internalType: "uint256",
-            name: "totalSwipes",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "rightSwipes",
-            type: "uint256",
-          },
         ],
         internalType: "struct NFTBiddingPlatform.NFTListing",
         name: "",
@@ -599,48 +589,13 @@ export const ABI = [
     type: "function",
   },
   {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "tokenId",
-        type: "uint256",
-      },
-    ],
-    name: "getSwipeRatio",
+    inputs: [],
+    name: "getTotalListings",
     outputs: [
       {
         internalType: "uint256",
         name: "",
         type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    name: "hasUserSwiped",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
       },
     ],
     stateMutability: "view",
@@ -723,16 +678,6 @@ export const ABI = [
       {
         internalType: "uint256",
         name: "highestBid",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "totalSwipes",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "rightSwipes",
         type: "uint256",
       },
     ],
@@ -889,24 +834,6 @@ export const ABI = [
       },
     ],
     stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "tokenId",
-        type: "uint256",
-      },
-      {
-        internalType: "bool",
-        name: "direction",
-        type: "bool",
-      },
-    ],
-    name: "swipeNFT",
-    outputs: [],
-    stateMutability: "nonpayable",
     type: "function",
   },
   {

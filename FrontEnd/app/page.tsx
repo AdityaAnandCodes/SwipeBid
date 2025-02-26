@@ -13,6 +13,8 @@ import {
   config,
   QueryClient,
 } from "@/lib/wallet_utils";
+import ExplorePage from "./explore/page";
+import OwnerListingsPage from "./listings/page";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +24,8 @@ export default function Home() {
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider>
           <main className="w-full min-h-screen relative flex flex-col gap-8">
+            <ExplorePage />
+            <OwnerListingsPage />
             <Navbar />
             <Hero />
             <SwipeTutorial />
