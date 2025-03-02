@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, MotionStyle, AnimationControls, PanInfo } from "framer-motion";
 import { formatEther } from "viem";
 import { getHighestBidInfo, formatAddress } from "@/utils/nftUtils";
 import {
@@ -17,8 +17,55 @@ import {
   Trophy,
   Cross,
 } from "lucide-react";
+import {
+  NFTListing as ImportedNFTListing,
+  FormattedNFT as ImportedFormattedNFT,
+} from "@/types/nft";
 
-export const NFTCard = ({
+// Define interfaces for props and NFT data
+interface NFTListing {
+  tokenId: bigint;
+  seller: string;
+  basePrice: bigint;
+  imageURI: string;
+  name?: string;
+  description?: string;
+  highestBid?: bigint;
+  traits?: string[];
+  price: bigint; // Added missing property
+  isActive: boolean; // Added missing property
+}
+
+interface FormattedNFT {
+  tokenId: string;
+  seller: string;
+  price: string;
+  image?: string;
+  name?: string;
+  description?: string;
+  traits?: string[];
+}
+
+interface NFTCardProps {
+  isLoading: boolean;
+  listings: NFTListing[];
+  currentNFT?: NFTListing;
+  currentIndex: number;
+  setCurrentIndex: React.Dispatch<React.SetStateAction<number>>;
+  showLoopNotification: boolean;
+  controls: AnimationControls;
+  cardRef: React.RefObject<HTMLDivElement | null>;
+  handleDragEnd: (
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) => void;
+  swipeDirection: string | null;
+  showNextNFT: () => void;
+  setSwipeDirection: React.Dispatch<React.SetStateAction<string | null>>;
+  convertToNFTFormat: (nft: NFTListing) => Promise<FormattedNFT>;
+  setSelectedNFT: React.Dispatch<React.SetStateAction<FormattedNFT | null>>;
+}
+export const NFTCard: React.FC<NFTCardProps> = ({
   isLoading,
   listings,
   currentNFT,
@@ -34,7 +81,7 @@ export const NFTCard = ({
   convertToNFTFormat,
   setSelectedNFT,
 }) => {
-  const [showTraits, setShowTraits] = useState(false);
+  const [showTraits, setShowTraits] = useState<boolean>(false);
 
   // Render action buttons
   const renderActionButtons = () => {
@@ -112,7 +159,7 @@ export const NFTCard = ({
   };
 
   // Render NFT traits
-  const renderNFTTraits = (nft) => {
+  const renderNFTTraits = (nft?: NFTListing) => {
     if (!nft || !nft.traits || nft.traits.length === 0) {
       return (
         <div className="text-gray-400 text-center py-2 sm:py-3 md:py-4 flex items-center justify-center">
@@ -185,7 +232,7 @@ export const NFTCard = ({
             <div
               className="bg-white h-full transition-all duration-300 ease-out"
               style={{
-                width: `${(currentIndex / (listings.length - 1)) * 100}%`,
+                width: `${(currentIndex / (listings.length - 1)) * 100 || 0}%`,
               }}
             ></div>
           </div>
@@ -213,10 +260,11 @@ export const NFTCard = ({
                         "ipfs://",
                         ""
                       )}`
-                    : currentNFT?.imageURI
+                    : currentNFT?.imageURI || "/default-image.png"
                 }
-                onError={async (e) => {
+                onError={async (e: React.SyntheticEvent<HTMLImageElement>) => {
                   try {
+                    const target = e.target as HTMLImageElement;
                     const metadataUrl = currentNFT?.imageURI.startsWith(
                       "ipfs://"
                     )
@@ -238,19 +286,19 @@ export const NFTCard = ({
                       metadata.image &&
                       metadata.image.startsWith("ipfs://")
                     ) {
-                      e.target.src = `https://ipfs.io/ipfs/${metadata.image.replace(
+                      target.src = `https://ipfs.io/ipfs/${metadata.image.replace(
                         "ipfs://",
                         ""
                       )}`;
                     } else {
-                      e.target.src = metadata.image || "/default-image.png";
+                      target.src = metadata.image || "/default-image.png";
                     }
                   } catch (error) {
                     console.error("Error fetching metadata:", error);
-                    e.target.src = "/default-image.png";
+                    (e.target as HTMLImageElement).src = "/default-image.png";
                   }
                 }}
-                alt={currentNFT?.name}
+                alt={currentNFT?.name || "NFT Image"}
                 className="w-full h-full object-cover"
               />
 
@@ -261,7 +309,7 @@ export const NFTCard = ({
               <div className="absolute top-2 sm:top-3 md:top-4 left-2 sm:left-3 md:left-4 flex flex-col gap-1 sm:gap-2">
                 <div className="bg-black/70 backdrop-blur-md px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium flex items-center">
                   <Fingerprint className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />
-                  <span>#{currentNFT?.tokenId.toString()}</span>
+                  <span>#{currentNFT?.tokenId.toString() || "0"}</span>
                 </div>
 
                 <div className="bg-black/70 backdrop-blur-md px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium flex items-center gap-1">
@@ -335,7 +383,7 @@ export const NFTCard = ({
                   <div>
                     <div className="flex justify-between items-start">
                       <h2 className="font-bold text-lg sm:text-xl md:text-2xl">
-                        {currentNFT?.name}
+                        {currentNFT?.name || "Unnamed NFT"}
                       </h2>
                       <div className="flex items-center space-x-1 text-gray-400">
                         <User className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -346,7 +394,7 @@ export const NFTCard = ({
                     </div>
 
                     <p className="mt-1 sm:mt-2 text-gray-300 text-xs sm:text-sm line-clamp-2">
-                      {currentNFT?.description}
+                      {currentNFT?.description || "No description available"}
                     </p>
                   </div>
 

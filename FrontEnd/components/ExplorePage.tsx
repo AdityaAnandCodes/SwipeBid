@@ -3,26 +3,30 @@
 import { useState, useEffect, useRef } from "react";
 import { useAccount, useReadContract } from "wagmi";
 import { ABI, ADDRESS } from "@/lib/constant_contracts";
-import { motion, useAnimation } from "framer-motion";
+import { motion, useAnimation, PanInfo } from "framer-motion";
 import BiddingPopUp from "@/components/BiddingPopUp";
 import { NFTCard } from "@/components/NFTCard";
 import { convertToNFTFormat, formatAddress } from "@/utils/nftUtils";
+import { NFTListing, FormattedNFT } from "@/types/nft"; // Import the shared types
 
 const ExplorePage = () => {
-  const [listings, setListings] = useState([]);
-  const [allListings, setAllListings] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [totalListings, setTotalListings] = useState(0);
-  const [selectedNFT, setSelectedNFT] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [swipeDirection, setSwipeDirection] = useState(null);
-  const [completedFirstCycle, setCompletedFirstCycle] = useState(false);
-  const [showLoopNotification, setShowLoopNotification] = useState(false);
+  const [listings, setListings] = useState<NFTListing[]>([]);
+  const [allListings, setAllListings] = useState<NFTListing[]>([]);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [currentPage, setCurrentPage] = useState<number>(0);
+  const [totalListings, setTotalListings] = useState<number>(0);
+  const [selectedNFT, setSelectedNFT] = useState<FormattedNFT | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [swipeDirection, setSwipeDirection] = useState<string | null>(null);
+  const [completedFirstCycle, setCompletedFirstCycle] =
+    useState<boolean>(false);
+  const [showLoopNotification, setShowLoopNotification] =
+    useState<boolean>(false);
   const ITEMS_PER_PAGE = 12;
 
   const controls = useAnimation();
-  const cardRef = useRef(null);
+  // Fix: Specify that the ref is definitely for an HTMLDivElement
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const { address } = useAccount();
 
@@ -51,7 +55,16 @@ const ExplorePage = () => {
 
   useEffect(() => {
     if (activeListingsData) {
-      const newListings = activeListingsData;
+      // Cast and map the data to ensure all required properties are present
+      const newListings = (activeListingsData as any[]).map((listing) => ({
+        ...listing,
+        basePrice: listing.price, // Ensure basePrice exists (mapping price to basePrice)
+        imageURI: listing.imageURI || "", // Ensure imageURI exists with a default
+        // Fix: Add missing properties from the NFTListing interface
+        price: listing.price, // Add price property
+        isActive: true, // Add isActive property
+      })) as NFTListing[];
+
       setListings(newListings);
 
       // Add to our all listings collection if we're still in first cycle
@@ -74,7 +87,7 @@ const ExplorePage = () => {
     }
   }, [activeListingsData, completedFirstCycle]);
 
-  const handleSwipe = async (info) => {
+  const handleSwipe = async (info: PanInfo) => {
     const offset = info.offset.x;
     const velocity = info.velocity.x;
 
@@ -151,12 +164,22 @@ const ExplorePage = () => {
     refetchTotalListings();
   };
 
-  const handleDragEnd = (event, info) => {
+  const handleDragEnd = (
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) => {
     handleSwipe(info);
   };
 
-  const getCurrentNFT = () => {
+  const getCurrentNFT = (): NFTListing | undefined => {
     return listings[currentIndex];
+  };
+
+  // Fix: Update the type definition to match the NFTCard component's expected types
+  const adaptedConvertToNFTFormat = async (
+    nft: NFTListing
+  ): Promise<FormattedNFT> => {
+    return await convertToNFTFormat(nft);
   };
 
   return (
@@ -176,14 +199,18 @@ const ExplorePage = () => {
             swipeDirection={swipeDirection}
             showNextNFT={showNextNFT}
             setSwipeDirection={setSwipeDirection}
-            convertToNFTFormat={convertToNFTFormat}
+            convertToNFTFormat={adaptedConvertToNFTFormat}
             setSelectedNFT={setSelectedNFT}
           />
         </div>
       </main>
 
       {selectedNFT && (
-        <BiddingPopUp onClose={closeBiddingPopup} nft={selectedNFT} />
+        <BiddingPopUp
+          onClose={closeBiddingPopup}
+          // Fix: Cast the FormattedNFT to the type expected by BiddingPopUp
+          nft={selectedNFT as any}
+        />
       )}
     </div>
   );
