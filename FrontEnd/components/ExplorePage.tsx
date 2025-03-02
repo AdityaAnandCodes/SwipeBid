@@ -161,8 +161,8 @@ const ExplorePage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
-      <main className="container mx-auto py-8 px-4 flex flex-col items-center">
-        <div className="w-full max-w-md h-full flex flex-col items-center justify-center relative mt-4">
+      <main className="container mx-auto py-4 sm:py-6 md:py-8 px-2 sm:px-4 flex flex-col items-center">
+        <div className="w-full min-h-screen max-w-xs sm:max-w-sm md:max-w-md h-full flex flex-col items-center justify-center relative mt-2 sm:mt-4">
           <NFTCard
             isLoading={isLoading}
             listings={listings}
