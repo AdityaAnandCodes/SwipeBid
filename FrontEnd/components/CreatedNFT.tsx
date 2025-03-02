@@ -1,18 +1,11 @@
 import React from "react";
-import {
-  Sparkles,
-  Upload,
-  Tag,
-  Wallet,
-  Plus,
-  Info,
-} from "lucide-react";
+import { Sparkles, Upload, Tag, Wallet, Plus, Info } from "lucide-react";
 import Link from "next/link";
 
 const CreateNFTTutorial = () => {
   return (
-    <section className="w-full p-8 min-h-screen grid grid-cols-2 gap-12 place-items-center">
-      <div className="max-w-xl space-y-8 py-12">
+    <section className="w-full p-4 md:p-8 min-h-screen flex flex-col lg:grid lg:grid-cols-2 gap-8 lg:gap-12 place-items-center">
+      <div className="max-w-xl space-y-8 py-6 lg:py-12">
         <div className="space-y-4">
           <div className="inline-flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full">
             <Sparkles className="w-4 h-4 text-yellow-300/80" />
@@ -66,11 +59,11 @@ const CreateNFTTutorial = () => {
         </div>
       </div>
 
-      <div className="flex items-center">
-        <div className="w-full max-w-lg bg-white/5 rounded-xl p-8 backdrop-blur-sm">
+      <div className="flex items-center w-full">
+        <div className="w-full max-w-lg bg-white/5 rounded-xl p-4 md:p-8 backdrop-blur-sm">
           <div className="space-y-6">
             <div
-              className="border border-dashed border-white/30 rounded-xl p-8 text-center
+              className="border border-dashed border-white/30 rounded-xl p-4 md:p-8 text-center
             hover:border-white/30 transition-colors"
             >
               <div
@@ -126,7 +119,7 @@ const CreateNFTTutorial = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm text-gray-400 mb-2 block">
                     Price
@@ -167,7 +160,9 @@ const CreateNFTTutorial = () => {
                 className="w-full bg-emerald-500 hover:bg-emerald-500/90 text-white p-3 
               rounded-lg transition-colors"
               >
-                <Link href="/create" className="w-full">Create NFT</Link>
+                <Link href="/create" className="w-full block">
+                  Create NFT
+                </Link>
               </button>
             </div>
           </div>

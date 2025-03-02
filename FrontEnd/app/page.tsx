@@ -23,7 +23,7 @@ export default function Home() {
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider>
-          <main className="w-full min-h-screen relative flex flex-col gap-8">
+          <main className="w-full max-sm:overflow-hidden min-h-screen relative flex flex-col gap-8 max-sm:gap-4">
             <Navbar />
             <Hero />
             <SwipeTutorial />

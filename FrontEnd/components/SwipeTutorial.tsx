@@ -1,22 +1,37 @@
-"use client"
-import { ChevronRight, ChevronLeft, Sparkles, Heart, X, Info, HeadsetIcon, HeartCrack, HeartIcon, Cross } from 'lucide-react';
-import Iphone from './Iphone';
+"use client";
+import {
+  ChevronRight,
+  ChevronLeft,
+  Sparkles,
+  Heart,
+  X,
+  Info,
+  HeadsetIcon,
+  HeartCrack,
+  HeartIcon,
+  Cross,
+} from "lucide-react";
+import Iphone from "./Iphone";
 
 const SwipeTutorial = () => {
   return (
-    <section className="w-full p-4 h-screen grid grid-cols-2 place-items-center">
-        <div className="max-w-xl space-y-8">
+    <section className="w-full p-4 min-h-screen lg:h-screen flex flex-col lg:grid lg:grid-cols-2 place-items-center gap-8 lg:gap-0">
+      <div className="max-w-xl space-y-8">
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-emerald-400">
             <Sparkles className="w-5 h-5" />
-            <span className="text-sm font-medium uppercase tracking-wider">New Feature</span>
+            <span className="text-sm font-medium uppercase tracking-wider">
+              New Feature
+            </span>
           </div>
           <h2 className="text-4xl font-bold text-white">
             Discover & Bid on NFTs
             <span className="block text-emerald-400">with a Simple Swipe</span>
           </h2>
           <p className="text-lg text-zinc-400 leading-relaxed">
-            Finding your next digital masterpiece has never been easier. Our innovative swipe-based NFT marketplace brings the familiar dating app experience to NFT collecting.
+            Finding your next digital masterpiece has never been easier. Our
+            innovative swipe-based NFT marketplace brings the familiar dating
+            app experience to NFT collecting.
           </p>
         </div>
 
@@ -31,7 +46,9 @@ const SwipeTutorial = () => {
                 <ChevronRight className="w-5 h-5 text-emerald-400" />
               </h3>
               <p className="text-zinc-400">
-                Found an NFT you love? Swipe right to place your bid and potentially add it to your collection. Get notified instantly when your bid is accepted.
+                Found an NFT you love? Swipe right to place your bid and
+                potentially add it to your collection. Get notified instantly
+                when your bid is accepted.
               </p>
             </div>
           </div>
@@ -46,7 +63,9 @@ const SwipeTutorial = () => {
                 <ChevronLeft className="w-5 h-5 text-rose-400" />
               </h3>
               <p className="text-zinc-400">
-                Not interested? Simply swipe left to see the next unique NFT in your discovery feed. Your preferences help us curate better recommendations.
+                Not interested? Simply swipe left to see the next unique NFT in
+                your discovery feed. Your preferences help us curate better
+                recommendations.
               </p>
             </div>
           </div>
@@ -54,18 +73,20 @@ const SwipeTutorial = () => {
 
         <div className="flex items-center gap-2 text-sm text-zinc-500">
           <Info className="w-4 h-4" />
-          <p>Your preferences are saved automatically to improve recommendations</p>
+          <p>
+            Your preferences are saved automatically to improve recommendations
+          </p>
         </div>
       </div>
-        <div className='flex flex-col items-center justify-center'>
-          <Iphone />
-           
-        <div className="flex items-center gap-2 text-xs text-zinc-500 mt-5">  
+      <div className="flex flex-col items-center justify-center mt-8 lg:mt-0">
+        <Iphone />
+
+        <div className="flex items-center gap-2 text-xs text-zinc-500 mt-5">
           <p>The Above Model is for Demo Purpose.</p>
         </div>
-        </div>
+      </div>
     </section>
-  )
-}
+  );
+};
 
-export default SwipeTutorial
+export default SwipeTutorial;

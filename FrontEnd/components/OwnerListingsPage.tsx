@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
+import { MoveLeft, RefreshCw, Image as ImageIcon } from "lucide-react";
 import {
   useAccount,
   useReadContract,
@@ -223,67 +225,107 @@ const OwnerListingsPage = () => {
 
   if (!address) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4">
-        <h2 className="text-2xl font-bold mb-4">Connect Your Wallet</h2>
-        <p className="text-gray-400 text-center max-w-md">
-          You need to connect your wallet to view your NFT listings.
-        </p>
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white flex flex-col items-center justify-center p-4">
+        <div className="bg-gray-800 p-8 rounded-2xl shadow-2xl border border-gray-700 max-w-lg w-full">
+          <h2 className="text-3xl font-bold mb-6 text-center">
+            Connect Your Wallet
+          </h2>
+          <p className="text-gray-300 text-center mb-8">
+            You need to connect your wallet to view your NFT listings.
+          </p>
+          <Link
+            href="/"
+            className="flex items-center justify-center gap-2 text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            <MoveLeft size={20} />
+            <span>Return to Home</span>
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <header className="border-b border-gray-800 p-4">
-        <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold">My NFT Listings</h1>
-          <button
-            onClick={refreshListings}
-            className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors duration-200"
-            disabled={isLoading}
-          >
-            {isLoading ? "Refreshing..." : "Refresh"}
-          </button>
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
+      <header className="border-b border-gray-800 py-6 px-1 sticky top-0 bg-gray-900 bg-opacity-95 backdrop-blur-sm z-10">
+        <div className="container mx-auto flex justify-between items-center gap-4">
+          <div className="flex items-center gap-4">
+            <Link
+              href="/"
+              className="text-gray-300 hover:text-white flex items-center gap-2 bg-gray-800 px-3 py-2 rounded-lg transition-all hover:bg-gray-700"
+            >
+              <MoveLeft size={18} />
+              <span className="hidden sm:inline">Back</span>
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="text-sm bg-gray-800 px-3 py-2 rounded-lg border border-gray-700">
+              <span className="text-gray-400 mr-2 hidden sm:inline">
+                Connected:
+              </span>
+              <span className="font-medium">{formatAddress(address)}</span>
+            </div>
+            <button
+              onClick={refreshListings}
+              className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2"
+              disabled={isLoading}
+            >
+              <RefreshCw
+                size={18}
+                className={`${isLoading ? "animate-spin" : ""}`}
+              />
+              <span className="hidden sm:inline">
+                {isLoading ? "Refreshing..." : "Refresh"}
+              </span>
+            </button>
+          </div>
         </div>
       </header>
 
       <main className="container mx-auto py-8 px-4">
         <section>
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Your Active Listings</h2>
-            <div className="text-sm text-gray-400">
-              Connected as: {formatAddress(address)}
-            </div>
+          <div className="mb-8">
+            <h2 className="text-xl md:text-2xl font-semibold mb-2">
+              Your Active Listings
+            </h2>
+            <p className="text-gray-400">Manage and track your listed NFTs.</p>
           </div>
 
           {isLoading ? (
-            <div className="flex justify-center items-center h-64">
+            <div className="flex flex-col justify-center items-center h-64 gap-4">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+              <p className="text-gray-400">Loading your listings...</p>
             </div>
           ) : ownerListings.length === 0 ? (
-            <div className="text-center p-12 bg-gray-800 rounded-lg">
-              <p className="text-xl mb-4">
+            <div className="text-center p-12 bg-gray-800/50 rounded-2xl border border-gray-700 shadow-xl">
+              <div className="flex justify-center mb-6">
+                <div className="bg-gray-700/50 p-4 rounded-full">
+                  <ImageIcon size={48} className="text-gray-400" />
+                </div>
+              </div>
+              <p className="text-xl mb-6 text-gray-300">
                 You don't have any active NFT listings
               </p>
-              <a
+              <Link
                 href="/create"
-                className="inline-block bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg transition-colors duration-200"
+                className="inline-block bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-6 py-3 rounded-lg transition-colors duration-200 shadow-lg"
               >
                 Create New NFT
-              </a>
+              </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {ownerListings.map((nft) => (
                 <div
                   key={nft.tokenId.toString()}
-                  className="bg-gray-800 rounded-xl overflow-hidden border border-gray-700 hover:border-blue-500 transition-all duration-200"
+                  className="bg-gray-800/50 rounded-2xl overflow-hidden border border-gray-700 hover:border-blue-500 transition-all duration-200 shadow-lg hover:shadow-blue-900/20 hover:translate-y-[-4px] group"
                 >
-                  <div className="relative h-48 overflow-hidden">
+                  <div className="relative aspect-square overflow-hidden">
                     <img
                       src={getImageUrl(nft)}
                       alt={nft.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                       onError={(e) => {
                         // Fallback image if loading fails
                         (e.target as HTMLImageElement).src =
@@ -291,33 +333,40 @@ const OwnerListingsPage = () => {
                       }}
                     />
 
-                    <div className="absolute top-2 left-2 bg-black bg-opacity-60 px-2 py-1 rounded-md text-xs">
+                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent opacity-60"></div>
+                    <div className="absolute top-3 left-3 bg-black bg-opacity-70 px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm">
                       #{nft.tokenId.toString()}
                     </div>
-                    <div className="absolute top-2 right-2 bg-green-600 px-2 py-1 rounded-md text-xs">
+                    <div className="absolute top-3 right-3 bg-gradient-to-r from-green-600 to-emerald-700 px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm">
                       {formatEther(nft.basePrice)} ETH
                     </div>
                   </div>
 
-                  <div className="p-4">
-                    <h3 className="font-semibold text-lg truncate">
+                  <div className="p-5">
+                    <h3 className="font-bold text-lg truncate group-hover:text-blue-400 transition-colors">
                       {nft.name}
                     </h3>
-                    <p className="mt-2 text-sm h-12 overflow-hidden">
+                    <p className="mt-2 text-sm text-gray-300 h-12 overflow-hidden line-clamp-2">
                       {getDescription(nft)}
                     </p>
 
-                    <div className="mt-4 space-y-2">
-                      <div className="text-sm">
+                    <div className="mt-4 space-y-3 pt-4 border-t border-gray-700">
+                      <div className="flex justify-between items-center text-sm">
                         <span className="text-gray-400">Base price: </span>
-                        <span className="font-medium">
+                        <span className="font-medium bg-gray-700 px-2 py-1 rounded">
                           {formatEther(nft.basePrice)} ETH
                         </span>
                       </div>
 
-                      <div className="text-sm">
+                      <div className="flex justify-between items-center text-sm">
                         <span className="text-gray-400">Highest bid: </span>
-                        <span className="text-green-400 font-medium">
+                        <span
+                          className={`font-medium px-2 py-1 rounded ${
+                            nft.highestBid > BigInt(0)
+                              ? "bg-green-900/50 text-green-400"
+                              : "bg-gray-700 text-gray-400"
+                          }`}
+                        >
                           {nft.highestBid > BigInt(0)
                             ? `${formatEther(nft.highestBid)} ETH`
                             : "No bids yet"}
@@ -325,11 +374,9 @@ const OwnerListingsPage = () => {
                       </div>
 
                       {nft.highestBid > BigInt(0) && (
-                        <div className="text-sm">
-                          <span className="text-gray-400">
-                            Highest bidder:{" "}
-                          </span>
-                          <span className="font-medium">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-400">Highest bidder:</span>
+                          <span className="font-medium bg-gray-700 px-2 py-1 rounded">
                             {formatAddress(nft.highestBidder)}
                           </span>
                         </div>
@@ -341,11 +388,13 @@ const OwnerListingsPage = () => {
                       disabled={
                         endingBidding && selectedTokenId === nft.tokenId
                       }
-                      className={`mt-4 w-full ${
-                        nft.highestBid > BigInt(0)
-                          ? "bg-green-600 hover:bg-green-700"
-                          : "bg-red-600 hover:bg-red-700"
-                      } text-white py-2 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
+                      className={`mt-6 w-full py-3 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-lg ${
+                        endingBidding && selectedTokenId === nft.tokenId
+                          ? "bg-gray-600 text-gray-300"
+                          : nft.highestBid > BigInt(0)
+                          ? "bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800 text-white"
+                          : "bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white"
+                      }`}
                     >
                       {endingBidding && selectedTokenId === nft.tokenId
                         ? "Processing..."

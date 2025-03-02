@@ -1,5 +1,4 @@
 "use client";
-import OwnerListingsPage from "@/components/OwnerListingsPage";
 
 import {
   WagmiProvider,
@@ -8,6 +7,8 @@ import {
   config,
   QueryClient,
 } from "@/lib/wallet_utils";
+import OwnerListingsPage from "@/components/OwnerListingsPage";
+
 const queryClient = new QueryClient();
 
 export default function Explore() {
@@ -15,7 +16,7 @@ export default function Explore() {
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider>
-          <main className="w-full min-h-screen relative flex flex-col gap-8">
+          <main className="w-full min-h-screen relative bg-gradient-to-b from-gray-900 to-black text-white">
             <OwnerListingsPage />
           </main>
         </RainbowKitProvider>
