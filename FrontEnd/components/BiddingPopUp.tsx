@@ -11,23 +11,7 @@ import { formatEther, parseEther } from "viem";
 
 // Contract configuration
 import { ABI, ADDRESS } from "@/lib/constant_contracts";
-
-interface NFT {
-  id: number;
-  image: string;
-  title: string;
-  price: number;
-  owner: string;
-  description: string;
-  traits: Record<string, string>;
-  // Additional properties from blockchain
-  tokenId: bigint;
-  basePrice: bigint;
-  highestBid: bigint;
-  highestBidder: string;
-  seller: string;
-  originalTraits?: string[];
-}
+import { NFT } from "@/types/nft";
 
 interface BiddingPopUpProps {
   onClose: () => void;
@@ -92,20 +76,31 @@ const BiddingPopUp = ({ onClose, nft }: BiddingPopUpProps) => {
       return;
     }
 
-    // Safely get the current highest bid and base price values
+    // Safely ensure we have valid basePrice and highestBid values
+    const currentBasePrice = nft.basePrice
+      ? Number(formatEther(nft.basePrice))
+      : 0.001;
     const currentHighestBid =
-      nft.highestBid !== undefined ? Number(formatEther(nft.highestBid)) : 0;
-    const currentBasePrice =
-      nft.basePrice !== undefined ? Number(formatEther(nft.basePrice)) : 0;
+      nft.highestBid && nft.highestBid > BigInt(0)
+        ? Number(formatEther(nft.highestBid))
+        : 0;
 
     const bidAmountEth = parseFloat(bidAmount);
-    if (
-      isNaN(bidAmountEth) ||
-      bidAmountEth <= currentHighestBid ||
-      bidAmountEth < currentBasePrice
-    ) {
+
+    // Validation with proper error messages
+    if (isNaN(bidAmountEth)) {
+      alert("Please enter a valid bid amount");
+      return;
+    }
+
+    if (bidAmountEth < currentBasePrice) {
+      alert(`Bid must be at least ${currentBasePrice} ETH (base price)`);
+      return;
+    }
+
+    if (currentHighestBid > 0 && bidAmountEth <= currentHighestBid) {
       alert(
-        "Please enter a valid bid higher than the current highest bid and base price"
+        `Bid must be higher than current highest bid (${currentHighestBid} ETH)`
       );
       return;
     }
@@ -113,12 +108,14 @@ const BiddingPopUp = ({ onClose, nft }: BiddingPopUpProps) => {
     setIsLoading(true);
 
     try {
-      // Place bid
+      // Place bid with proper tokenId conversion
       placeBid({
         address: ADDRESS as `0x${string}`,
         abi: ABI,
         functionName: "placeBid",
-        args: [nft.tokenId],
+        args: [
+          typeof nft.tokenId === "bigint" ? nft.tokenId : BigInt(nft.tokenId),
+        ],
         value: parseEther(bidAmount),
       });
     } catch (error) {
@@ -130,31 +127,28 @@ const BiddingPopUp = ({ onClose, nft }: BiddingPopUpProps) => {
 
   // Safely calculate the minimum bid with null checks
   const minimumBid = (() => {
-    // Check if highestBid exists and is not undefined
-    if (nft.highestBid !== undefined && nft.highestBid > BigInt(0)) {
+    // Always ensure we have a valid basePrice
+    const basePrice = nft.basePrice ? formatEther(nft.basePrice) : "0.001";
+
+    // If there's a valid highest bid, add a small increment
+    if (nft.highestBid && nft.highestBid > BigInt(0)) {
       try {
+        // Add 0.01 ETH to the current highest bid
         return formatEther(nft.highestBid + parseEther("0.01"));
       } catch (error) {
-        return "0.01"; // Fallback if formatting fails
+        return basePrice; // Fallback to basePrice if formatting fails
       }
     }
-    // Check if basePrice exists and is not undefined
-    else if (nft.basePrice !== undefined) {
-      try {
-        return formatEther(nft.basePrice);
-      } catch (error) {
-        return "0.01"; // Fallback if formatting fails
-      }
-    }
-    // Default fallback
-    return "0.01";
+
+    // Otherwise use the basePrice
+    return basePrice;
   })();
 
   // Fallback/default values for missing NFT data
   const nftId = nft?.id || 0;
   const nftImage = nft?.image || "/placeholder.png";
   const nftTitle = nft?.title || "Untitled NFT";
-  const nftOwner = nft?.owner || address || "Unknown";
+  const nftOwner = nft?.owner || nft?.seller || address || "Unknown";
   const nftDescription = nft?.description || "No description available";
   const nftTraits = nft?.traits || {};
 
@@ -242,7 +236,7 @@ const BiddingPopUp = ({ onClose, nft }: BiddingPopUpProps) => {
                     <span className="text-blue-400">
                       {nft.basePrice !== undefined
                         ? `${formatEther(nft.basePrice)} ETH`
-                        : "N/A"}
+                        : "0.001 ETH"}
                     </span>
                   </div>
                 </div>
@@ -278,7 +272,9 @@ const BiddingPopUp = ({ onClose, nft }: BiddingPopUpProps) => {
               {/* Current highest bidder info */}
               {nft.highestBidder &&
                 nft.highestBidder !==
-                  "0x0000000000000000000000000000000000000000" && (
+                  "0x0000000000000000000000000000000000000000" &&
+                nft.highestBid &&
+                nft.highestBid > BigInt(0) && (
                   <div className="p-3 sm:p-4 bg-gray-800 rounded-md border border-gray-700">
                     <h3 className="text-sm sm:text-md font-semibold mb-2 sm:mb-3 flex items-center">
                       <Award
@@ -296,9 +292,7 @@ const BiddingPopUp = ({ onClose, nft }: BiddingPopUpProps) => {
                         {formatAddress(nft.highestBidder)}
                       </span>
                       <span className="text-white font-medium bg-blue-900 px-2 sm:px-3 py-0.5 sm:py-1 rounded-md text-xs sm:text-sm">
-                        {nft.highestBid !== undefined
-                          ? `${formatEther(nft.highestBid)} ETH`
-                          : "N/A"}
+                        {`${formatEther(nft.highestBid)} ETH`}
                       </span>
                     </div>
                   </div>

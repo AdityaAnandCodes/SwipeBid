@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { motion, MotionStyle, AnimationControls, PanInfo } from "framer-motion";
+import { motion, AnimationControls, PanInfo } from "framer-motion";
 import { formatEther } from "viem";
 import { getHighestBidInfo, formatAddress } from "@/utils/nftUtils";
+import { NFTListing, FormattedNFT } from "@/types/nft";
 import {
   Heart,
   User,
@@ -9,7 +10,6 @@ import {
   Clock,
   DollarSign,
   Fingerprint,
-  LayoutGrid,
   SwatchBook,
   ChevronRight,
   ChevronLeft,
@@ -19,30 +19,6 @@ import {
 } from "lucide-react";
 
 
-// Define interfaces for props and NFT data
-interface NFTListing {
-  tokenId: bigint;
-  seller: string;
-  basePrice: bigint;
-  imageURI: string;
-  name?: string;
-  description?: string;
-  highestBid?: bigint;
-  traits?: string[];
-  price: bigint; // Added missing property
-  isActive: boolean; // Added missing property
-}
-
-interface FormattedNFT {
-  tokenId: string;
-  seller: string;
-  price: string;
-  image?: string;
-  name?: string;
-  description?: string;
-  traits?: string[];
-}
-
 interface NFTCardProps {
   isLoading: boolean;
   listings: NFTListing[];
@@ -51,7 +27,7 @@ interface NFTCardProps {
   setCurrentIndex: React.Dispatch<React.SetStateAction<number>>;
   showLoopNotification: boolean;
   controls: AnimationControls;
-  cardRef: React.RefObject<HTMLDivElement | null>;
+  cardRef: React.RefObject<HTMLDivElement>;
   handleDragEnd: (
     _event: MouseEvent | TouchEvent | PointerEvent,
     info: PanInfo
@@ -62,6 +38,7 @@ interface NFTCardProps {
   convertToNFTFormat: (nft: NFTListing) => Promise<FormattedNFT>;
   setSelectedNFT: React.Dispatch<React.SetStateAction<FormattedNFT | null>>;
 }
+
 export const NFTCard: React.FC<NFTCardProps> = ({
   isLoading,
   listings,
@@ -191,7 +168,9 @@ export const NFTCard: React.FC<NFTCardProps> = ({
     return (
       <div className="flex flex-col justify-center items-center h-64 sm:h-80 md:h-96 gap-3 sm:gap-4">
         <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 md:h-16 md:w-16 border-t-4 border-b-4 border-white"></div>
-        <p className="text-sm sm:text-base text-gray-400">Loading NFTs... <br /> Please Connect Wallet</p>
+        <p className="text-sm sm:text-base text-gray-400">
+          Loading NFTs... <br /> Please Connect Wallet
+        </p>
       </div>
     );
   }

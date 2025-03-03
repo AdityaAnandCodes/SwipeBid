@@ -7,9 +7,10 @@ import { motion, useAnimation, PanInfo } from "framer-motion";
 import BiddingPopUp from "@/components/BiddingPopUp";
 import { NFTCard } from "@/components/NFTCard";
 import { convertToNFTFormat, formatAddress } from "@/utils/nftUtils";
-import { NFTListing, FormattedNFT } from "@/types/nft"; // Import the shared types
+import { NFTListing, FormattedNFT, NFT } from "@/types/nft"; // Import the shared types
 
 const ExplorePage = () => {
+
   const [listings, setListings] = useState<NFTListing[]>([]);
   const [allListings, setAllListings] = useState<NFTListing[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
@@ -25,7 +26,9 @@ const ExplorePage = () => {
   const ITEMS_PER_PAGE = 12;
 
   const controls = useAnimation();
-  const cardRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(
+    null
+  ) as React.RefObject<HTMLDivElement>;
 
   const { address } = useAccount();
 
@@ -56,12 +59,20 @@ const ExplorePage = () => {
     if (activeListingsData) {
       // Cast and map the data to ensure all required properties are present
       const newListings = (activeListingsData as any[]).map((listing) => ({
-        ...listing,
-        basePrice: listing.price, // Ensure basePrice exists (mapping price to basePrice)
-        imageURI: listing.imageURI || "", // Ensure imageURI exists with a default
-        // Fix: Add missing properties from the NFTListing interface
-        price: listing.price, // Add price property
-        isActive: true, // Add isActive property
+        tokenId: listing.tokenId,
+        seller: listing.seller || "",
+        name: listing.name || `NFT #${listing.tokenId.toString()}`,
+        description: listing.description || "No description available",
+        imageURI: listing.imageURI || "",
+        traits: listing.traits || [],
+        basePrice: listing.price || listing.basePrice || BigInt(0),
+        active: true,
+        highestBidder:
+          listing.highestBidder || "0x0000000000000000000000000000000000000000",
+        highestBid: listing.highestBid || BigInt(0),
+        // Additional properties for compatibility with NFTCard
+        isActive: true,
+        price: listing.price || listing.basePrice || BigInt(0),
       })) as NFTListing[];
 
       setListings(newListings);
@@ -174,42 +185,56 @@ const ExplorePage = () => {
     return listings[currentIndex];
   };
 
-  // Fix: Update the type definition to match the NFTCard component's expected types
-  const adaptedConvertToNFTFormat = async (
-    nft: NFTListing
-  ): Promise<FormattedNFT> => {
-    return await convertToNFTFormat(nft);
-  };
+  // Convert FormattedNFT to the format expected by BiddingPopUp
+  const convertToBiddingNFTFormat = (formattedNFT: FormattedNFT): NFT => {
+    // Create a traits record from either the traits array or attributes
+    let traitsRecord: Record<string, string> = {};
 
-  // Function to convert FormattedNFT to the format expected by BiddingPopUp
-  const convertToBiddingNFTFormat = (formattedNFT: FormattedNFT): any => {
+    // If we have attributes, use those first
+    if (formattedNFT.attributes && formattedNFT.attributes.length > 0) {
+      formattedNFT.attributes.forEach((attr) => {
+        if (attr.trait_type && attr.value !== undefined) {
+          traitsRecord[attr.trait_type] = String(attr.value);
+        }
+      });
+    }
+    // Otherwise if traits is a string array, convert to a record
+    else if (
+      Array.isArray(formattedNFT.traits) &&
+      formattedNFT.traits.length > 0 &&
+      typeof formattedNFT.traits[0] === "string"
+    ) {
+      (formattedNFT.traits as string[]).forEach((trait, index) => {
+        const parts = trait.split(":");
+        if (parts.length > 1) {
+          traitsRecord[parts[0].trim()] = parts[1].trim();
+        } else {
+          traitsRecord[`Trait ${index + 1}`] = trait.trim();
+        }
+      });
+    }
+    // If traits is already a record, use it directly
+    else if (
+      typeof formattedNFT.traits === "object" &&
+      !Array.isArray(formattedNFT.traits)
+    ) {
+      traitsRecord = formattedNFT.traits as unknown as Record<string, string>;
+    }
+
     return {
-      id:
-        typeof formattedNFT.id === "string"
-          ? parseInt(formattedNFT.id)
-          : formattedNFT.id || Number(formattedNFT.tokenId),
+      id: formattedNFT.id,
       image: formattedNFT.image || formattedNFT.imageURI || "",
-      title:
-        formattedNFT.title ||
-        formattedNFT.name ||
-        `NFT #${formattedNFT.id || formattedNFT.tokenId}`,
-      price: formattedNFT.price ? Number(formattedNFT.price) : 0,
-      owner: formattedNFT.owner || formattedNFT.seller || address || "",
-      description: formattedNFT.description || "",
-      traits:
-        formattedNFT.attributes?.reduce((acc: Record<string, string>, attr) => {
-          if (attr.trait_type && attr.value) {
-            acc[attr.trait_type] = attr.value.toString();
-          }
-          return acc;
-        }, {} as Record<string, string>) || {},
-      tokenId: formattedNFT.tokenId,
-      basePrice: formattedNFT.basePrice || formattedNFT.price || BigInt(0),
-      highestBid: formattedNFT.highestBid || BigInt(0),
-      highestBidder:
-        formattedNFT.highestBidder ||
-        "0x0000000000000000000000000000000000000000",
-      seller: formattedNFT.seller || "",
+      title: formattedNFT.title || formattedNFT.name,
+      price: parseFloat(formattedNFT.price),
+      owner: formattedNFT.owner || formattedNFT.seller,
+      description: formattedNFT.description,
+      traits: traitsRecord,
+      tokenId: BigInt(formattedNFT.tokenId),
+      basePrice: formattedNFT.basePrice,
+      highestBid: formattedNFT.highestBid,
+      highestBidder: formattedNFT.highestBidder,
+      seller: formattedNFT.seller,
+      originalTraits: formattedNFT.originalTraits,
     };
   };
 
@@ -230,7 +255,7 @@ const ExplorePage = () => {
             swipeDirection={swipeDirection}
             showNextNFT={showNextNFT}
             setSwipeDirection={setSwipeDirection}
-            convertToNFTFormat={adaptedConvertToNFTFormat}
+            convertToNFTFormat={convertToNFTFormat}
             setSelectedNFT={setSelectedNFT}
           />
         </div>

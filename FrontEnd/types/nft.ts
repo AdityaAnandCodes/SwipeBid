@@ -1,8 +1,6 @@
-// types/nft.ts
-
 export interface HighestBidInfo {
-  highestBid?: bigint;
-  highestBidder?: string;
+  highestBid: bigint;
+  highestBidder: string;
 }
 
 export interface NFTListing {
@@ -10,50 +8,62 @@ export interface NFTListing {
   seller: string;
   basePrice: bigint;
   imageURI: string;
+  price: bigint;
+
+  // Make these optional to match component usage
   name?: string;
   description?: string;
-  highestBid?: bigint;
-  highestBidder?: string; // Added this property
   traits?: string[];
-  price: bigint; // Required by NFTCard component
-  isActive: boolean; // Required by NFTCard component
+
+  // Standardize on one activity flag (using isActive)
+  isActive: boolean;
+
+  // Highest bid properties
+  highestBid?: bigint;
+  highestBidder?: string;
 }
 
 export interface FormattedNFT {
   tokenId: string;
   seller: string;
   price: string;
-  image?: string;
-  imageURI?: string; // Added this property
-  name?: string;
-  description?: string;
-  traits?: string[];
-  // Add properties that BiddingPopUp requires
-  id?: number | string;
-  title?: string;
-  owner?: string;
-  basePrice?: bigint | string;
-  highestBid?: bigint | string; // Added this property
-  highestBidder?: string; // Added this property
-  // Add support for attributes for NFT metadata
+  image: string;
+  imageURI: string;
+  name: string;
+  description: string;
+  traits: string[] | Record<string, string>;
+
+  // Properties that BiddingPopUp requires
+  id: number;
+  title: string;
+  owner: string;
+  basePrice: bigint;
+  highestBid: bigint;
+  highestBidder: string;
+
+  // Support for attributes for NFT metadata
   attributes?: Array<{
     trait_type: string;
     value: string | number;
   }>;
+
+  // Additional properties
+  originalTraits?: any;
 }
 
 // Define the NFT interface expected by BiddingPopUp
 export interface NFT {
-  id: number; // Changed to number only to match BiddingPopUp requirements
+  id: number;
   image: string;
   title: string;
   price: number;
   owner: string;
   description: string;
   traits: Record<string, string>;
-  tokenId: string;
-  basePrice: bigint | string;
-  highestBid: bigint | string;
+  tokenId: bigint;
+  basePrice: bigint;
+  highestBid: bigint;
   highestBidder: string;
   seller: string;
+  originalTraits?: string[];
 }
