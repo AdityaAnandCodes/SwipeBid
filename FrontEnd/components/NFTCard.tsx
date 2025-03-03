@@ -17,10 +17,7 @@ import {
   Trophy,
   Cross,
 } from "lucide-react";
-import {
-  NFTListing as ImportedNFTListing,
-  FormattedNFT as ImportedFormattedNFT,
-} from "@/types/nft";
+
 
 // Define interfaces for props and NFT data
 interface NFTListing {
@@ -194,7 +191,7 @@ export const NFTCard: React.FC<NFTCardProps> = ({
     return (
       <div className="flex flex-col justify-center items-center h-64 sm:h-80 md:h-96 gap-3 sm:gap-4">
         <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 md:h-16 md:w-16 border-t-4 border-b-4 border-white"></div>
-        <p className="text-sm sm:text-base text-gray-400">Loading NFTs...</p>
+        <p className="text-sm sm:text-base text-gray-400">Loading NFTs... <br /> Please Connect Wallet</p>
       </div>
     );
   }

@@ -22,8 +22,7 @@ export const getHighestBidInfo = (nft: NFTListing | undefined): string => {
     : "Unknown";
 
   return `${bidAmount} ETH by ${bidder}`;
-};
-// Convert contract NFT format to formatted display version
+};// Convert contract NFT format to formatted display version
 export const convertToNFTFormat = async (nft: NFTListing): Promise<FormattedNFT> => {
   // Ensure all required properties exist
   if (!nft) {
@@ -39,9 +38,15 @@ export const convertToNFTFormat = async (nft: NFTListing): Promise<FormattedNFT>
     seller: nft.seller,
     price: formatEther(price),
     image: nft.imageURI || "",
+    imageURI: nft.imageURI || "", // Add imageURI to maintain compatibility
     name: nft.name || `NFT #${nft.tokenId.toString()}`,
     description: nft.description || "No description available",
-    traits: nft.traits || []
+    traits: nft.traits || [],
+    // Add properties needed by BiddingPopUp
+    id: Number(nft.tokenId),
+    basePrice: nft.basePrice,
+    highestBid: nft.highestBid,
+    highestBidder: nft.highestBidder,
   };
 
   // If the image is an IPFS URI, try to fetch metadata
@@ -62,7 +67,10 @@ export const convertToNFTFormat = async (nft: NFTListing): Promise<FormattedNFT>
         
         if (metadata.name) formattedNFT.name = metadata.name;
         if (metadata.description) formattedNFT.description = metadata.description;
+        
+        // Store the original attributes
         if (metadata.attributes || metadata.traits) {
+          formattedNFT.attributes = metadata.attributes || metadata.traits;
           formattedNFT.traits = (metadata.attributes || metadata.traits || []).map(
             (attr: any) => `${attr.trait_type || "Trait"}: ${attr.value || "Unknown"}`
           );

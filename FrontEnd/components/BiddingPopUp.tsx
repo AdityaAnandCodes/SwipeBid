@@ -35,6 +35,7 @@ interface BiddingPopUpProps {
 }
 
 const formatAddress = (address: string) => {
+  if (!address) return "Unknown";
   return `${address.substring(0, 6)}...${address.substring(
     address.length - 4
   )}`;
@@ -44,6 +45,8 @@ const BiddingPopUp = ({ onClose, nft }: BiddingPopUpProps) => {
   const [bidAmount, setBidAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+
+  console.log("NFT in BiddingPopUp:", nft); // Debug log
 
   const { address } = useAccount();
 
@@ -89,11 +92,17 @@ const BiddingPopUp = ({ onClose, nft }: BiddingPopUpProps) => {
       return;
     }
 
+    // Safely get the current highest bid and base price values
+    const currentHighestBid =
+      nft.highestBid !== undefined ? Number(formatEther(nft.highestBid)) : 0;
+    const currentBasePrice =
+      nft.basePrice !== undefined ? Number(formatEther(nft.basePrice)) : 0;
+
     const bidAmountEth = parseFloat(bidAmount);
     if (
       isNaN(bidAmountEth) ||
-      bidAmountEth <= Number(formatEther(nft.highestBid)) ||
-      bidAmountEth < Number(formatEther(nft.basePrice))
+      bidAmountEth <= currentHighestBid ||
+      bidAmountEth < currentBasePrice
     ) {
       alert(
         "Please enter a valid bid higher than the current highest bid and base price"
@@ -103,21 +112,51 @@ const BiddingPopUp = ({ onClose, nft }: BiddingPopUpProps) => {
 
     setIsLoading(true);
 
-    // Place bid
-    placeBid({
-      address: ADDRESS as `0x${string}`,
-      abi: ABI,
-      functionName: "placeBid",
-      args: [nft.tokenId],
-      value: parseEther(bidAmount),
-    });
+    try {
+      // Place bid
+      placeBid({
+        address: ADDRESS as `0x${string}`,
+        abi: ABI,
+        functionName: "placeBid",
+        args: [nft.tokenId],
+        value: parseEther(bidAmount),
+      });
+    } catch (error) {
+      console.error("Error placing bid:", error);
+      setIsLoading(false);
+      alert("Failed to place bid. Please try again.");
+    }
   };
 
-  const minimumBid = formatEther(
-    nft.highestBid > BigInt(0)
-      ? nft.highestBid + parseEther("0.01")
-      : nft.basePrice
-  );
+  // Safely calculate the minimum bid with null checks
+  const minimumBid = (() => {
+    // Check if highestBid exists and is not undefined
+    if (nft.highestBid !== undefined && nft.highestBid > BigInt(0)) {
+      try {
+        return formatEther(nft.highestBid + parseEther("0.01"));
+      } catch (error) {
+        return "0.01"; // Fallback if formatting fails
+      }
+    }
+    // Check if basePrice exists and is not undefined
+    else if (nft.basePrice !== undefined) {
+      try {
+        return formatEther(nft.basePrice);
+      } catch (error) {
+        return "0.01"; // Fallback if formatting fails
+      }
+    }
+    // Default fallback
+    return "0.01";
+  })();
+
+  // Fallback/default values for missing NFT data
+  const nftId = nft?.id || 0;
+  const nftImage = nft?.image || "/placeholder.png";
+  const nftTitle = nft?.title || "Untitled NFT";
+  const nftOwner = nft?.owner || address || "Unknown";
+  const nftDescription = nft?.description || "No description available";
+  const nftTraits = nft?.traits || {};
 
   return (
     <section
@@ -155,24 +194,28 @@ const BiddingPopUp = ({ onClose, nft }: BiddingPopUpProps) => {
                     </div>
                   )}
                   <img
-                    src={nft.image}
-                    alt={nft.title}
+                    src={nftImage}
+                    alt={nftTitle}
                     className={`absolute inset-0 w-full h-full object-contain p-2 sm:p-4 transition-opacity duration-300 ${
                       imageLoaded ? "opacity-100" : "opacity-0"
                     }`}
                     onLoad={() => setImageLoaded(true)}
+                    onError={(e) => {
+                      console.error("Image failed to load:", e);
+                      setImageLoaded(true); // Still mark as loaded to remove spinner
+                    }}
                   />
                 </div>
 
                 {/* NFT ID badge */}
                 <div className="absolute top-2 sm:top-4 left-2 sm:left-4 bg-gray-900 px-2 sm:px-3 py-1 rounded-md text-xs sm:text-sm text-white font-mono border border-gray-700">
-                  #{nft.id.toString()}
+                  #{nftId?.toString() || "N/A"}
                 </div>
               </div>
 
               {/* NFT traits in grid */}
               <div className="mt-4 sm:mt-6 grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 text-xs sm:text-sm">
-                {Object.entries(nft.traits).map(([key, value]) => (
+                {Object.entries(nftTraits).map(([key, value]) => (
                   <div
                     key={key}
                     className="bg-gray-800 p-2 sm:p-3 rounded-md border border-gray-700"
@@ -192,12 +235,14 @@ const BiddingPopUp = ({ onClose, nft }: BiddingPopUpProps) => {
               <div className="space-y-2 sm:space-y-3">
                 <div className="flex justify-between items-center flex-wrap gap-2 sm:gap-3">
                   <h2 className="text-xl sm:text-2xl font-bold text-white">
-                    {nft.title}
+                    {nftTitle || "Untitled NFT"}
                   </h2>
                   <div className="px-3 sm:px-4 py-1 sm:py-2 bg-gray-800 rounded-md text-xs sm:text-sm font-medium border border-gray-700">
                     Base:{" "}
                     <span className="text-blue-400">
-                      {formatEther(nft.basePrice)} ETH
+                      {nft.basePrice !== undefined
+                        ? `${formatEther(nft.basePrice)} ETH`
+                        : "N/A"}
                     </span>
                   </div>
                 </div>
@@ -207,7 +252,7 @@ const BiddingPopUp = ({ onClose, nft }: BiddingPopUpProps) => {
                   <User size={14} className="hidden sm:block" />
                   <span>Owner:</span>
                   <span className="font-mono bg-gray-800 px-2 py-0.5 sm:py-1 rounded text-gray-300">
-                    {formatAddress(nft.owner)}
+                    {formatAddress(nftOwner)}
                   </span>
                 </div>
               </div>
@@ -226,35 +271,38 @@ const BiddingPopUp = ({ onClose, nft }: BiddingPopUpProps) => {
                   Description
                 </h3>
                 <p className="text-gray-300 text-xs sm:text-sm leading-relaxed">
-                  {nft.description}
+                  {nftDescription}
                 </p>
               </div>
 
               {/* Current highest bidder info */}
-              {nft.highestBidder !==
-                "0x0000000000000000000000000000000000000000" && (
-                <div className="p-3 sm:p-4 bg-gray-800 rounded-md border border-gray-700">
-                  <h3 className="text-sm sm:text-md font-semibold mb-2 sm:mb-3 flex items-center">
-                    <Award
-                      size={12}
-                      className="mr-1.5 text-gray-400 sm:hidden"
-                    />
-                    <Award
-                      size={14}
-                      className="mr-2 text-gray-400 hidden sm:block"
-                    />
-                    Current Highest Bidder
-                  </h3>
-                  <div className="flex items-center justify-between p-2 sm:p-3 bg-gray-700 rounded-md">
-                    <span className="font-mono text-xs sm:text-sm">
-                      {formatAddress(nft.highestBidder)}
-                    </span>
-                    <span className="text-white font-medium bg-blue-900 px-2 sm:px-3 py-0.5 sm:py-1 rounded-md text-xs sm:text-sm">
-                      {formatEther(nft.highestBid)} ETH
-                    </span>
+              {nft.highestBidder &&
+                nft.highestBidder !==
+                  "0x0000000000000000000000000000000000000000" && (
+                  <div className="p-3 sm:p-4 bg-gray-800 rounded-md border border-gray-700">
+                    <h3 className="text-sm sm:text-md font-semibold mb-2 sm:mb-3 flex items-center">
+                      <Award
+                        size={12}
+                        className="mr-1.5 text-gray-400 sm:hidden"
+                      />
+                      <Award
+                        size={14}
+                        className="mr-2 text-gray-400 hidden sm:block"
+                      />
+                      Current Highest Bidder
+                    </h3>
+                    <div className="flex items-center justify-between p-2 sm:p-3 bg-gray-700 rounded-md">
+                      <span className="font-mono text-xs sm:text-sm">
+                        {formatAddress(nft.highestBidder)}
+                      </span>
+                      <span className="text-white font-medium bg-blue-900 px-2 sm:px-3 py-0.5 sm:py-1 rounded-md text-xs sm:text-sm">
+                        {nft.highestBid !== undefined
+                          ? `${formatEther(nft.highestBid)} ETH`
+                          : "N/A"}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
               {/* Bidding UI */}
               <div className="p-3 sm:p-4 bg-gray-800 rounded-md border border-gray-700">
@@ -266,7 +314,8 @@ const BiddingPopUp = ({ onClose, nft }: BiddingPopUpProps) => {
                     <p className="text-xs sm:text-sm text-gray-400">
                       Current bid:
                       <span className="text-white ml-1 font-medium">
-                        {nft.highestBid > BigInt(0)
+                        {nft.highestBid !== undefined &&
+                        nft.highestBid > BigInt(0)
                           ? `${formatEther(nft.highestBid)} ETH`
                           : "No bids yet"}
                       </span>

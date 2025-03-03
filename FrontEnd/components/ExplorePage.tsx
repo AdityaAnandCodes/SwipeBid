@@ -25,7 +25,6 @@ const ExplorePage = () => {
   const ITEMS_PER_PAGE = 12;
 
   const controls = useAnimation();
-  // Fix: Specify that the ref is definitely for an HTMLDivElement
   const cardRef = useRef<HTMLDivElement>(null);
 
   const { address } = useAccount();
@@ -182,6 +181,38 @@ const ExplorePage = () => {
     return await convertToNFTFormat(nft);
   };
 
+  // Function to convert FormattedNFT to the format expected by BiddingPopUp
+  const convertToBiddingNFTFormat = (formattedNFT: FormattedNFT): any => {
+    return {
+      id:
+        typeof formattedNFT.id === "string"
+          ? parseInt(formattedNFT.id)
+          : formattedNFT.id || Number(formattedNFT.tokenId),
+      image: formattedNFT.image || formattedNFT.imageURI || "",
+      title:
+        formattedNFT.title ||
+        formattedNFT.name ||
+        `NFT #${formattedNFT.id || formattedNFT.tokenId}`,
+      price: formattedNFT.price ? Number(formattedNFT.price) : 0,
+      owner: formattedNFT.owner || formattedNFT.seller || address || "",
+      description: formattedNFT.description || "",
+      traits:
+        formattedNFT.attributes?.reduce((acc: Record<string, string>, attr) => {
+          if (attr.trait_type && attr.value) {
+            acc[attr.trait_type] = attr.value.toString();
+          }
+          return acc;
+        }, {} as Record<string, string>) || {},
+      tokenId: formattedNFT.tokenId,
+      basePrice: formattedNFT.basePrice || formattedNFT.price || BigInt(0),
+      highestBid: formattedNFT.highestBid || BigInt(0),
+      highestBidder:
+        formattedNFT.highestBidder ||
+        "0x0000000000000000000000000000000000000000",
+      seller: formattedNFT.seller || "",
+    };
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
       <main className="container mx-auto py-4 sm:py-6 md:py-8 px-2 sm:px-4 flex flex-col items-center">
@@ -208,8 +239,7 @@ const ExplorePage = () => {
       {selectedNFT && (
         <BiddingPopUp
           onClose={closeBiddingPopup}
-          // Fix: Cast the FormattedNFT to the type expected by BiddingPopUp
-          nft={selectedNFT as any}
+          nft={convertToBiddingNFTFormat(selectedNFT)}
         />
       )}
     </div>
