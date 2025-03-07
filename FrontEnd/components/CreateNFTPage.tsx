@@ -1,7 +1,3 @@
-import CreateNFTPage from "@/components/CreateNFTPage"
-
-
-const page = () => {
 "use client";
 
 import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
@@ -9,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useDropzone } from "react-dropzone";
 import { z } from "zod";
-import toast from "react-hot-toast";
 import { Sparkles, ImageIcon, Loader2, Wallet, MoveLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ethers } from "ethers";
@@ -87,7 +82,7 @@ export default function CreateNFTPage({
   // Initialize dropzone only after mounting
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
-      "image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp"],
+      "image/*": [".png", ".jpg", ".jpeg", ".gif"],
     },
     maxSize: 50 * 1024 * 1024,
     onDrop: (acceptedFiles) => {
@@ -359,11 +354,6 @@ export default function CreateNFTPage({
   const watchedPrice = watch("price") || "";
 
   return (
-    <CreateNFTPage />
-  )
-}
-
-export default page
     <main className="min-h-screen bg-gradient-to-b from-zinc-900 to-black">
       <Link
         href="/"
@@ -591,8 +581,7 @@ export default page
                     <input
                       id="basePrice"
                       type="number"
-                      min="0"
-                      step="0.0001"
+                      step="0.01"
                       value={formData.basePrice}
                       onChange={(e: ChangeEvent<HTMLInputElement>) =>
                         setFormData({ ...formData, basePrice: e.target.value })
