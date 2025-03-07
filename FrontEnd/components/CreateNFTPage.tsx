@@ -581,7 +581,8 @@ export default function CreateNFTPage({
                     <input
                       id="basePrice"
                       type="number"
-                      step="0.01"
+                      min="0"
+                      step="0.00001"
                       value={formData.basePrice}
                       onChange={(e: ChangeEvent<HTMLInputElement>) =>
                         setFormData({ ...formData, basePrice: e.target.value })
