@@ -37,6 +37,12 @@ const Navbar = () => {
             >
               Your Listings
             </Link>
+            <Link
+              href="/owned"
+              className="hover:text-yellow-300 transition-all duration-300"
+            >
+              Your NFTs
+            </Link>
 
             {/* Connect Button Desktop */}
             <ConnectWalletButton />

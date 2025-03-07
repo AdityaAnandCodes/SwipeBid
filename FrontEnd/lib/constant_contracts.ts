@@ -1,4 +1,4 @@
-export const ADDRESS = "0x6a9208c2bbb40de3e9d9dc96e4ebd9460f49126e";
+export const ADDRESS = "0x269FB549fbbBbA2A4d9b2838b815D576F3A9fD6F";
 export const ABI = [
   {
     inputs: [],
@@ -192,7 +192,7 @@ export const ABI = [
         type: "uint256",
       },
       {
-        indexed: false,
+        indexed: true,
         internalType: "address",
         name: "winner",
         type: "address",
@@ -230,7 +230,7 @@ export const ABI = [
         type: "uint256",
       },
       {
-        indexed: false,
+        indexed: true,
         internalType: "address",
         name: "seller",
         type: "address",
@@ -255,7 +255,7 @@ export const ABI = [
         type: "uint256",
       },
       {
-        indexed: false,
+        indexed: true,
         internalType: "address",
         name: "bidder",
         type: "address",
@@ -402,7 +402,7 @@ export const ABI = [
     outputs: [
       {
         internalType: "uint256",
-        name: "",
+        name: "tokenId",
         type: "uint256",
       },
     ],
@@ -445,9 +445,29 @@ export const ABI = [
             type: "uint256",
           },
           {
+            internalType: "uint256",
+            name: "basePrice",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "highestBid",
+            type: "uint256",
+          },
+          {
             internalType: "address",
             name: "seller",
             type: "address",
+          },
+          {
+            internalType: "address",
+            name: "highestBidder",
+            type: "address",
+          },
+          {
+            internalType: "bool",
+            name: "active",
+            type: "bool",
           },
           {
             internalType: "string",
@@ -468,26 +488,6 @@ export const ABI = [
             internalType: "string[]",
             name: "traits",
             type: "string[]",
-          },
-          {
-            internalType: "uint256",
-            name: "basePrice",
-            type: "uint256",
-          },
-          {
-            internalType: "bool",
-            name: "active",
-            type: "bool",
-          },
-          {
-            internalType: "address",
-            name: "highestBidder",
-            type: "address",
-          },
-          {
-            internalType: "uint256",
-            name: "highestBid",
-            type: "uint256",
           },
         ],
         internalType: "struct NFTBiddingPlatform.NFTListing[]",
@@ -535,9 +535,29 @@ export const ABI = [
             type: "uint256",
           },
           {
+            internalType: "uint256",
+            name: "basePrice",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "highestBid",
+            type: "uint256",
+          },
+          {
             internalType: "address",
             name: "seller",
             type: "address",
+          },
+          {
+            internalType: "address",
+            name: "highestBidder",
+            type: "address",
+          },
+          {
+            internalType: "bool",
+            name: "active",
+            type: "bool",
           },
           {
             internalType: "string",
@@ -559,30 +579,29 @@ export const ABI = [
             name: "traits",
             type: "string[]",
           },
-          {
-            internalType: "uint256",
-            name: "basePrice",
-            type: "uint256",
-          },
-          {
-            internalType: "bool",
-            name: "active",
-            type: "bool",
-          },
-          {
-            internalType: "address",
-            name: "highestBidder",
-            type: "address",
-          },
-          {
-            internalType: "uint256",
-            name: "highestBid",
-            type: "uint256",
-          },
         ],
         internalType: "struct NFTBiddingPlatform.NFTListing",
         name: "",
         type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "winner",
+        type: "address",
+      },
+    ],
+    name: "getNFTsWonByAddress",
+    outputs: [
+      {
+        internalType: "uint256[]",
+        name: "",
+        type: "uint256[]",
       },
     ],
     stateMutability: "view",
@@ -641,9 +660,29 @@ export const ABI = [
         type: "uint256",
       },
       {
+        internalType: "uint256",
+        name: "basePrice",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "highestBid",
+        type: "uint256",
+      },
+      {
         internalType: "address",
         name: "seller",
         type: "address",
+      },
+      {
+        internalType: "address",
+        name: "highestBidder",
+        type: "address",
+      },
+      {
+        internalType: "bool",
+        name: "active",
+        type: "bool",
       },
       {
         internalType: "string",
@@ -659,26 +698,6 @@ export const ABI = [
         internalType: "string",
         name: "imageURI",
         type: "string",
-      },
-      {
-        internalType: "uint256",
-        name: "basePrice",
-        type: "uint256",
-      },
-      {
-        internalType: "bool",
-        name: "active",
-        type: "bool",
-      },
-      {
-        internalType: "address",
-        name: "highestBidder",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "highestBid",
-        type: "uint256",
       },
     ],
     stateMutability: "view",
@@ -889,6 +908,30 @@ export const ABI = [
     name: "transferFrom",
     outputs: [],
     stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    name: "winnerNFTs",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
     type: "function",
   },
   {

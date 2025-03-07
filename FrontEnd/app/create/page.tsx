@@ -83,7 +83,7 @@ export default function CreateNFTPage({
   // Initialize dropzone only after mounting
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
-      "image/*": [".png", ".jpg", ".jpeg", ".gif"],
+      "image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp"],
     },
     maxSize: 50 * 1024 * 1024,
     onDrop: (acceptedFiles) => {
@@ -356,7 +356,12 @@ export default function CreateNFTPage({
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-zinc-900 to-black">
-      <Link href="/" className="absolute top-5 left-5 w-14 hover:scale-110 duration-300 transition-all"><MoveLeft /></Link>
+      <Link
+        href="/"
+        className="absolute top-5 left-5 w-14 hover:scale-110 duration-300 transition-all"
+      >
+        <MoveLeft />
+      </Link>
       <div className="container max-w-7xl mx-auto px-4 py-12">
         {/* Header Section */}
         <div className="text-center mb-12">
@@ -577,7 +582,8 @@ export default function CreateNFTPage({
                     <input
                       id="basePrice"
                       type="number"
-                      step="0.01"
+                      min="0"
+                      step="0.0001"
                       value={formData.basePrice}
                       onChange={(e: ChangeEvent<HTMLInputElement>) =>
                         setFormData({ ...formData, basePrice: e.target.value })
