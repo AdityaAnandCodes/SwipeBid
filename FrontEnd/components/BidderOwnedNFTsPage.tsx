@@ -102,37 +102,34 @@ const BidderOwnedNFTsPage = () => {
 
   const { address } = useAccount();
 
-  // Get active listings
-  const { data: activeListingsData, refetch: refetchActiveListings } =
-    useReadContract({
-      address: ADDRESS as `0x${string}`,
-      abi: ABI,
-      functionName: "getActiveListings",
-      args: [BigInt(0), BigInt(100)], // Assuming a reasonable batch size
-    });
+  // Get won NFTs
+  const { data: wonNFTsData, refetch: refetchWonNFTs } = useReadContract({
+    address: ADDRESS as `0x${string}`,
+    abi: ABI,
+    functionName: "getWonNFTsDetails",
+    args: [address],
+    query: {
+      enabled: !!address,
+    },
+  });
 
   useEffect(() => {
-    if (activeListingsData && address) {
-      const listings = activeListingsData as unknown as NFTListing[];
-
-      // Filter NFTs where this address is the highest bidder but the auction has ended
-      const ownedNFTs = listings.filter(
-        (nft) =>
-          nft.highestBidder.toLowerCase() === address.toLowerCase() &&
-          !nft.active // Ensure the auction has ended
-      );
-
-      console.log("Owned NFTs:", ownedNFTs);
-      setOwnedNFTs(ownedNFTs);
+    if (wonNFTsData && address) {
+      const wonNFTs = wonNFTsData as unknown as NFTListing[];
+      console.log("Won NFTs:", wonNFTs);
+      setOwnedNFTs(wonNFTs);
 
       // Fetch metadata for all owned NFTs
-      if (ownedNFTs.length > 0) {
-        fetchNFTMetadata(ownedNFTs);
+      if (wonNFTs.length > 0) {
+        fetchNFTMetadata(wonNFTs);
       }
 
       setIsLoading(false);
+    } else if (address) {
+      // If no data but address exists, set loading to false
+      setIsLoading(false);
     }
-  }, [activeListingsData, address]);
+  }, [wonNFTsData, address]);
 
   const fetchNFTMetadata = async (nfts: NFTListing[]) => {
     try {
@@ -164,7 +161,7 @@ const BidderOwnedNFTsPage = () => {
 
   const refreshListings = () => {
     setIsLoading(true);
-    refetchActiveListings();
+    refetchWonNFTs();
   };
 
   const getImageUrl = (nft: NFTListing) => {
