@@ -11,13 +11,10 @@ import {
   DollarSign,
   Fingerprint,
   SwatchBook,
-  ChevronRight,
-  ChevronLeft,
   Info,
   Trophy,
   Cross,
 } from "lucide-react";
-
 
 interface NFTCardProps {
   isLoading: boolean;
@@ -294,45 +291,6 @@ export const NFTCard: React.FC<NFTCardProps> = ({
                     {formatEther(currentNFT?.basePrice || BigInt(0))} ETH
                   </span>
                 </div>
-              </div>
-
-              {/* Navigation arrows for manual browsing */}
-              <div className="absolute top-1/2 -translate-y-1/2 left-2 sm:left-3 md:left-4">
-                <button
-                  onClick={() => {
-                    if (currentIndex > 0) {
-                      setCurrentIndex(currentIndex - 1);
-                      setShowTraits(false);
-                    }
-                  }}
-                  disabled={currentIndex === 0}
-                  className={`bg-black/50 p-1 sm:p-2 rounded-full ${
-                    currentIndex === 0
-                      ? "opacity-50 cursor-not-allowed"
-                      : "hover:bg-black/70"
-                  }`}
-                >
-                  <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-                </button>
-              </div>
-
-              <div className="absolute top-1/2 -translate-y-1/2 right-2 sm:right-3 md:right-4">
-                <button
-                  onClick={() => {
-                    if (currentIndex < listings.length - 1) {
-                      setCurrentIndex(currentIndex + 1);
-                      setShowTraits(false);
-                    }
-                  }}
-                  disabled={currentIndex === listings.length - 1}
-                  className={`bg-black/50 p-1 sm:p-2 rounded-full ${
-                    currentIndex === listings.length - 1
-                      ? "opacity-50 cursor-not-allowed"
-                      : "hover:bg-black/70"
-                  }`}
-                >
-                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
-                </button>
               </div>
 
               {/* Bid status badge */}
