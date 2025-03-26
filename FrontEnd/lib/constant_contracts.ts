@@ -1,4 +1,4 @@
-export const ADDRESS = "0x59b25EE500170A32a3635E44a54a8f5d9A629b79";
+export const ADDRESS = "0x08DeF49c19Aa82e78BE1Dd2B159245B8291a7590";
 export const ABI = [
   { type: "constructor", inputs: [], stateMutability: "nonpayable" },
   {
