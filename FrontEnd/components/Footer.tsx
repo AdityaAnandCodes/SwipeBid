@@ -1,7 +1,15 @@
 import React from 'react';
 import { Twitter, Instagram, Github, Mail, Heart, Sword, Shield, Wallet } from 'lucide-react';
+import Link from 'next/link';
 
 const Footer = () => {
+  const links = [
+    { MarketPlace: "explore" },
+    { Create: "create" },
+    { Creation: "listings" },
+    { Winnings: "owned" },
+  ];
+
   const socialLinks = [
     { icon: <Twitter size={20} />, href: "#", label: "Twitter" },
     { icon: <Instagram size={20} />, href: "#", label: "Instagram" },
@@ -25,7 +33,8 @@ const Footer = () => {
               SwipeBid <Heart size={20} className="text-yellow-300" />
             </h3>
             <p className="text-zinc-400">
-              Discover unique digital art through our innovative swipe-based NFT marketplace.
+              Discover unique digital art through our innovative swipe-based NFT
+              marketplace.
             </p>
           </div>
 
@@ -34,7 +43,10 @@ const Footer = () => {
             <h4 className="text-xl font-semibold">Features</h4>
             <ul className="space-y-2">
               {features.map((feature, index) => (
-                <li key={index} className="flex items-center gap-2 text-zinc-400 hover:text-zinc-200 transition-colors">
+                <li
+                  key={index}
+                  className="flex items-center gap-2 text-zinc-400 hover:text-zinc-200 transition-colors"
+                >
                   {feature.icon}
                   <span>{feature.title}</span>
                 </li>
@@ -46,24 +58,32 @@ const Footer = () => {
           <div className="space-y-4">
             <h4 className="text-xl font-semibold">Quick Links</h4>
             <ul className="space-y-2">
-              {['Marketplace', 'How it Works', 'About Us', 'Support'].map((link, index) => (
-                <li key={index}>
-                  <a href="#" className="text-zinc-400 hover:text-zinc-200 transition-colors">
-                    {link}
-                  </a>
-                </li>
-              ))}
+              {links.map((linkObj, index) => {
+                const [key, value] = Object.entries(linkObj)[0];
+                return (
+                  <li key={index}>
+                    <Link
+                      href={`/${value}`}
+                      className="text-zinc-400 hover:text-zinc-200 transition-colors"
+                    >
+                      {key}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </div>
 
           {/* Newsletter Section */}
           <div className="space-y-4">
             <h4 className="text-xl font-semibold">Stay Updated</h4>
-            <p className="text-zinc-400">Subscribe to our newsletter for the latest drops and features.</p>
+            <p className="text-zinc-400">
+              Subscribe to our newsletter for the latest drops and features.
+            </p>
             <div className="flex gap-2">
-              <input 
-                type="email" 
-                placeholder="Enter your email" 
+              <input
+                type="email"
+                placeholder="Enter your email"
                 className="bg-zinc-800 px-4 py-2 rounded-lg flex-grow focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
               <button className="bg-emerald-500 px-4 py-2 rounded-lg hover:bg-emerald-500/80 transition-colors">
@@ -78,7 +98,7 @@ const Footer = () => {
           <p className="text-zinc-400 text-sm">
             © 2025 SwipeBid. All rights reserved.
           </p>
-          
+
           <div className="flex gap-6">
             {socialLinks.map((social, index) => (
               <a
