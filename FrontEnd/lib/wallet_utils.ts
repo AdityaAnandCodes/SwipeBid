@@ -17,17 +17,7 @@ import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 const config = getDefaultConfig({
   appName: "SwipeBid",
   projectId: "18c1e26594a664a3ae0618730927fada",
-  chains: [
-    mainnet,
-    polygon,
-    optimism,
-    arbitrum,
-    base,
-    mantleSepoliaTestnet,
-    lineaSepolia,
-    lineaTestnet,
-    arbitrumSepolia,
-  ],
+  chains: [lineaSepolia],
   ssr: true, // If your dApp uses server side rendering (SSR)
 });
 
