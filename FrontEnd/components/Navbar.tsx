@@ -128,7 +128,7 @@ const ConnectWalletButton = () => {
                     onClick={openChainModal}
                     className="bg-white text-black px-3 py-2 rounded-lg hover:scale-105 transition-all duration-300"
                   >
-                    LogOut
+                    {chain.name}
                   </button>
 
                   <button
