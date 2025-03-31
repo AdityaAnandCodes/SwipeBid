@@ -1,15 +1,22 @@
 "use client";
 
-import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
+import React, { useState, useEffect, FormEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useDropzone } from "react-dropzone";
 import { z } from "zod";
 import { Sparkles, ImageIcon, Loader2, Wallet, MoveLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ethers } from "ethers";
+import { parseEther } from "viem";
 import { ADDRESS, ABI } from "@/lib/constant_contracts";
 import Link from "next/link";
+import {
+  useAccount,
+  useConnect,
+  useDisconnect,
+  useWriteContract,
+  useWaitForTransactionReceipt,
+} from "wagmi";
 
 const createNFTSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -52,7 +59,6 @@ export default function CreateNFTPage({
   const [mounted, setMounted] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<FormDataType>({
     name: "",
     description: "",
@@ -60,10 +66,23 @@ export default function CreateNFTPage({
     basePrice: "",
     image: null,
   });
-  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [success, setSuccess] = useState<boolean>(false);
-  const [userAddress, setUserAddress] = useState<string>("");
+
+  // Wagmi hooks - only initialize these on the client side
+  const { address: userAddress, isConnected } = useAccount();
+  const { connect, connectors, isPending: isConnectPending } = useConnect();
+  const {
+    writeContract,
+    data: hash,
+    isPending: isWritePending,
+    status: writeStatus,
+  } = useWriteContract();
+
+  // Only call this hook if hash exists
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = hash
+    ? useWaitForTransactionReceipt({ hash })
+    : { isLoading: false, isSuccess: false };
 
   const {
     register,
@@ -79,14 +98,16 @@ export default function CreateNFTPage({
     },
   });
 
-  // Initialize dropzone only after mounting
+  // Determine if any loading state is active
+  const loading = isConnectPending || isWritePending || isConfirming;
+
+  // Initialize dropzone
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
       "image/*": [".png", ".jpg", ".jpeg", ".gif"],
     },
     maxSize: 50 * 1024 * 1024,
     onDrop: (acceptedFiles) => {
-      if (!mounted) return; // Skip if not mounted yet
       if (acceptedFiles.length > 0) {
         const file = acceptedFiles[0];
         setFile(file);
@@ -94,6 +115,7 @@ export default function CreateNFTPage({
         setFormData((prev) => ({ ...prev, image: file }));
       }
     },
+    disabled: !mounted, // Disable if not mounted
   });
 
   // Mount effect to prevent hydration mismatches
@@ -101,59 +123,38 @@ export default function CreateNFTPage({
     setMounted(true);
   }, []);
 
-  // Only get wallet address after component is mounted
+  // Reset success state when hash changes
   useEffect(() => {
-    if (!mounted) return; // Skip if not mounted yet
+    if (hash) {
+      setSuccess(false);
+    }
+  }, [hash]);
 
-    const getAddress = async (): Promise<void> => {
-      if (typeof window !== "undefined" && window.ethereum) {
-        try {
-          // Don't auto-connect - wait for user action instead
-          const provider = new ethers.BrowserProvider(window.ethereum);
+  // Set success when confirmed
+  useEffect(() => {
+    if (isConfirmed) {
+      setSuccess(true);
+      // Reset form after successful submission
+      setFormData({
+        name: "",
+        description: "",
+        traits: [""],
+        basePrice: "",
+        image: null,
+      });
+      setFile(null);
+      setFilePreview(null);
+    }
+  }, [isConfirmed]);
 
-          // Only try to get signer if user has already connected
-          if (localStorage.getItem("walletConnected") === "true") {
-            try {
-              const signer = await provider.getSigner();
-              const address = await signer.getAddress();
-              setUserAddress(address);
-            } catch (err) {
-              // Silent error - user probably needs to connect manually
-              console.log("Wallet not connected yet");
-            }
-          }
-        } catch (err: unknown) {
-          console.error("Error getting address:", err);
-        }
+  // Clean up URL objects when component unmounts or when file preview changes
+  useEffect(() => {
+    return () => {
+      if (filePreview) {
+        URL.revokeObjectURL(filePreview);
       }
     };
-
-    getAddress();
-  }, [mounted]);
-
-  // Function to connect wallet manually
-  const connectWallet = async () => {
-    if (typeof window !== "undefined" && window.ethereum) {
-      try {
-        setLoading(true);
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
-        const signer = await provider.getSigner();
-        const address = await signer.getAddress();
-        setUserAddress(address);
-        localStorage.setItem("walletConnected", "true");
-        setLoading(false);
-      } catch (err: unknown) {
-        console.error("Failed to connect wallet:", err);
-        setError(
-          err instanceof Error ? err.message : "Failed to connect wallet"
-        );
-        setLoading(false);
-      }
-    } else {
-      setError("MetaMask is not installed");
-    }
-  };
+  }, [filePreview]);
 
   const uploadToPinata = async (file: File): Promise<UploadResult> => {
     try {
@@ -251,23 +252,29 @@ export default function CreateNFTPage({
     }
   };
 
+  const connectWallet = async () => {
+    try {
+      // Find the first available connector (likely MetaMask)
+      const connector = connectors[0];
+      if (connector) {
+        connect({ connector });
+      } else {
+        throw new Error("No wallet connectors available");
+      }
+    } catch (err: unknown) {
+      console.error("Failed to connect wallet:", err);
+      setError(err instanceof Error ? err.message : "Failed to connect wallet");
+    }
+  };
+
   const handleSubmit = async (e: FormEvent): Promise<void> => {
     e.preventDefault();
-    setLoading(true);
     setError("");
     setSuccess(false);
 
     try {
-      if (typeof window === "undefined" || !window.ethereum) {
-        throw new Error("MetaMask is not installed");
-      }
-
-      if (!userAddress) {
-        // Try to connect wallet first
-        await connectWallet();
-        if (!userAddress) {
-          throw new Error("Please connect your wallet first");
-        }
+      if (!isConnected || !userAddress) {
+        throw new Error("Please connect your wallet first");
       }
 
       if (!formData.image) {
@@ -284,12 +291,15 @@ export default function CreateNFTPage({
         name: formData.name,
         description: formData.description,
         image: imageUrls.ipfsUrl, // Use IPFS URL in metadata
-        attributes: [
-          {
-            trait_type: "Category",
-            value: formData.traits[0],
-          },
-        ],
+        attributes: formData.traits
+          .filter((trait) => trait.trim() !== "")
+          .map((trait) => {
+            const [key, value] = trait.split(":").map((part) => part.trim());
+            return {
+              trait_type: key || "Trait",
+              value: value || "Value",
+            };
+          }),
       };
 
       // 3. Upload metadata to IPFS
@@ -297,41 +307,31 @@ export default function CreateNFTPage({
       const metadataUrls = await uploadMetadataToPinata(metadata);
       console.log("Metadata uploaded:", metadataUrls);
 
-      // 4. Create contract instance
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-      const contract = new ethers.Contract(address, abi, signer);
+      // 4. Create NFT on blockchain using wagmi
+      // Safely handle empty price strings
+      const priceString = formData.basePrice.trim() || "0";
+      const priceInWei = parseEther(priceString);
 
-      // 5. Create NFT on blockchain - Use metadataUrl instead of imageUrl
-      const priceInWei = ethers.parseEther(formData.basePrice);
-      const tx = await contract.createNFT(
-        formData.name,
-        formData.description,
-        metadataUrls.ipfsUrl, // Changed: Use metadata URI instead of image URI
-        formData.traits,
-        priceInWei
-      );
+      // Check if address is valid and in the expected format
+      const nftAddress = address as `0x${string}`;
 
-      await tx.wait();
-      setSuccess(true);
-
-      // Reset form
-      setFormData({
-        name: "",
-        description: "",
-        traits: [""],
-        basePrice: "",
-        image: null,
+      writeContract({
+        address: nftAddress,
+        abi,
+        functionName: "createNFT",
+        args: [
+          formData.name,
+          formData.description,
+          metadataUrls.ipfsUrl,
+          formData.traits.filter((t) => t.trim() !== ""),
+          priceInWei,
+        ],
       });
-      setFile(null);
-      setFilePreview(null);
     } catch (err: unknown) {
       console.error("Form submission error:", err);
       setError(
         err instanceof Error ? err.message : "An unknown error occurred"
       );
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -381,31 +381,31 @@ export default function CreateNFTPage({
         <div className="mb-8">
           <div
             className={`p-4 rounded-lg ${
-              userAddress ? "bg-green-500/10" : "bg-yellow-500/10"
+              isConnected ? "bg-green-500/10" : "bg-yellow-500/10"
             }`}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Wallet
                   className={`w-5 h-5 ${
-                    userAddress ? "text-green-400" : "text-yellow-400"
+                    isConnected ? "text-green-400" : "text-yellow-400"
                   }`}
                 />
                 <span
                   className={`font-medium ${
-                    userAddress ? "text-green-400" : "text-yellow-400"
+                    isConnected ? "text-green-400" : "text-yellow-400"
                   }`}
                 >
-                  {userAddress ? "Wallet Connected" : "Wallet Not Connected"}
+                  {isConnected ? "Wallet Connected" : "Wallet Not Connected"}
                 </span>
               </div>
-              {!userAddress && (
+              {!isConnected && (
                 <button
                   onClick={connectWallet}
-                  disabled={loading}
+                  disabled={isConnectPending}
                   className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
                 >
-                  {loading ? (
+                  {isConnectPending ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Connecting...
@@ -441,20 +441,7 @@ export default function CreateNFTPage({
                       isDragActive && "border-emerald-500/50 bg-emerald-500/5"
                     )}
                   >
-                    <input
-                      {...getInputProps()}
-                      onChange={(e) => {
-                        if (e.target.files && e.target.files.length > 0) {
-                          const selectedFile = e.target.files[0];
-                          setFile(selectedFile);
-                          setFilePreview(URL.createObjectURL(selectedFile));
-                          setFormData((prev) => ({
-                            ...prev,
-                            image: selectedFile,
-                          }));
-                        }
-                      }}
-                    />
+                    <input {...getInputProps()} />
                     {filePreview ? (
                       <div className="space-y-4">
                         <div className="aspect-square w-48 mx-auto rounded-lg overflow-hidden bg-white/5">
@@ -501,7 +488,7 @@ export default function CreateNFTPage({
                   <input
                     id="name"
                     value={formData.name}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
                     }
                     className={cn(
@@ -526,7 +513,7 @@ export default function CreateNFTPage({
                   <textarea
                     id="description"
                     value={formData.description}
-                    onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+                    onChange={(e) =>
                       setFormData({ ...formData, description: e.target.value })
                     }
                     className={cn(
@@ -552,7 +539,7 @@ export default function CreateNFTPage({
                   <input
                     id="traits"
                     value={formData.traits.join(", ")}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    onChange={(e) =>
                       setFormData({
                         ...formData,
                         traits: e.target.value
@@ -565,7 +552,6 @@ export default function CreateNFTPage({
                       "text-white placeholder-gray-500 focus:outline-none focus:border-white/20"
                     )}
                     placeholder="e.g. background:red, rarity:legendary, type:weapon"
-                    required
                   />
                   <p className="mt-1 text-xs text-gray-500">
                     Example: background:red, rarity:legendary, type:weapon
@@ -584,7 +570,7 @@ export default function CreateNFTPage({
                       min="0"
                       step="0.00001"
                       value={formData.basePrice}
-                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      onChange={(e) =>
                         setFormData({ ...formData, basePrice: e.target.value })
                       }
                       className={cn(
@@ -604,7 +590,7 @@ export default function CreateNFTPage({
                 {/* Submit Button */}
                 <button
                   type="submit"
-                  disabled={isSubmitting || loading || !userAddress}
+                  disabled={isWritePending || isConfirming || !isConnected}
                   className={cn(
                     "w-full bg-emerald-500 text-white p-3 rounded-lg",
                     "hover:bg-emerald-500/90 transition-colors",
@@ -612,25 +598,28 @@ export default function CreateNFTPage({
                     "flex items-center justify-center gap-2"
                   )}
                 >
-                  {isSubmitting || loading ? (
+                  {isWritePending || isConfirming ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Creating...
+                      {isWritePending ? "Creating..." : "Confirming..."}
                     </>
-                  ) : !userAddress ? (
+                  ) : !isConnected ? (
                     "Connect Wallet to Create NFT"
                   ) : (
                     "Create NFT"
                   )}
                 </button>
 
-                {/* Success/Error Messages */}
-                {success && (
+                {/* Transaction Status */}
+                {hash && (
                   <div className="text-green-400 p-4 bg-green-400/10 rounded-lg">
-                    NFT created successfully!
+                    <p>Transaction Hash: {hash.toString()}</p>
+                    {isConfirming && <div>Waiting for confirmation...</div>}
+                    {isConfirmed && <div>NFT created successfully!</div>}
                   </div>
                 )}
 
+                {/* Error Messages */}
                 {error && (
                   <div className="text-red-400 p-4 bg-red-400/10 rounded-lg">
                     {error}
@@ -681,6 +670,7 @@ export default function CreateNFTPage({
                       <h5 className="text-sm text-gray-400 mb-2">Traits</h5>
                       <div className="flex flex-wrap gap-2">
                         {formData.traits.map((trait, index) => {
+                          if (!trait.trim()) return null;
                           const [key, value] = trait.split(":");
                           return key && value ? (
                             <span
@@ -706,7 +696,11 @@ export default function CreateNFTPage({
                     <div className="flex justify-between text-sm mt-2">
                       <span className="text-gray-400">Owner</span>
                       <span className="text-white font-medium truncate max-w-[150px]">
-                        {userAddress || "Connect wallet to see address"}
+                        {userAddress
+                          ? `${userAddress.slice(0, 6)}...${userAddress.slice(
+                              -4
+                            )}`
+                          : "Connect wallet to see address"}
                       </span>
                     </div>
                   </div>

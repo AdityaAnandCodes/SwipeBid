@@ -14,20 +14,14 @@ import {
 } from "wagmi/chains";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 
-const config1 = getDefaultConfig({
-  appName: "SwipeBid",
-  projectId: "18c1e26594a664a3ae0618730927fada",
-  chains: [lineaSepolia],
-  ssr: true, // If your dApp uses server side rendering (SSR)
-});
+// const config1 = getDefaultConfig({
+//   appName: "SwipeBid",
+//   projectId: "18c1e26594a664a3ae0618730927fada",
+//   chains: [lineaSepolia],
+//   ssr: true, // If your dApp uses server side rendering (SSR)
+// });
 
-export {
-  config1,
-  QueryClient,
-  WagmiProvider,
-  QueryClientProvider,
-  RainbowKitProvider,
-};
+export { QueryClient, WagmiProvider, QueryClientProvider, RainbowKitProvider };
 
 import { http, createConfig } from "wagmi";
 import { metaMask } from "wagmi/connectors";

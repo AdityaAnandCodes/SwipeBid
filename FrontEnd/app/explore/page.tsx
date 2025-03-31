@@ -16,17 +16,15 @@ export default function Explore() {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider>
-          <main className="w-full min-h-screen relative flex flex-col gap-8">
-            <Link
-              href="/"
-              className="absolute top-5 left-5 w-14 hover:scale-110 duration-300 transition-all"
-            >
-              <MoveLeft />
-            </Link>
-            <ExplorePage />
-          </main>
-        </RainbowKitProvider>
+        <main className="w-full min-h-screen relative flex flex-col gap-8">
+          <Link
+            href="/"
+            className="absolute top-5 left-5 w-14 hover:scale-110 duration-300 transition-all"
+          >
+            <MoveLeft />
+          </Link>
+          <ExplorePage />
+        </main>
       </QueryClientProvider>
     </WagmiProvider>
   );

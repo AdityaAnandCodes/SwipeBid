@@ -15,11 +15,9 @@ export default function Explore() {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider>
-          <main className="w-full min-h-screen relative bg-gradient-to-b from-gray-900 to-black text-white">
-            <OwnerListingsPage />
-          </main>
-        </RainbowKitProvider>
+        <main className="w-full min-h-screen relative bg-gradient-to-b from-gray-900 to-black text-white">
+          <OwnerListingsPage />
+        </main>
       </QueryClientProvider>
     </WagmiProvider>
   );
