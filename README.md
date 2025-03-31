@@ -34,7 +34,7 @@ SwipeBid is an innovative NFT marketplace that introduces a Tinder-like swiping 
 ```sh
 # Clone the repository
 git clone https://github.com/yourusername/swipebid.git
-cd swipebid
+cd Frontend
 
 # Install dependencies
 npm install  # or yarn install
@@ -50,7 +50,10 @@ The app should be running at `http://localhost:3000`.
 
 ## Smart Contracts
 - The smart contracts are deployed on the Linea Blockchain.
-- To interact with them, ensure you have a Web3 provider like MetaMask.
+- To interact with them, ensure you have a Web3 provider MetaMask.
+- Deployed Link - https://sepolia.lineascan.build/address/0x08DeF49c19Aa82e78BE1Dd2B159245B8291a7590 
+
+<img src="https://github.com/AdityaAnandCodes/SwipeBid/blob/main/FrontEnd/public/Showcase/MetaMaskSS.png" alt="Metamask SS" width="300" />
 
 ## Contribution
 Contributions are welcome! Feel free to fork the repo, submit issues, or create pull requests.
