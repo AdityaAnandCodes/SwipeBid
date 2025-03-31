@@ -6,6 +6,9 @@ const MetaMaskLogo = ({ width = 100, height = 100, className = "" } : any) => {
       width={width}
       height={height}
       className={className}
+      style={{
+        filter: "drop-shadow(0 0 0.3px black)",
+      }}
     >
       <title>metamask</title>
       <polygon
