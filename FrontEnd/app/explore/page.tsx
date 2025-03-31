@@ -4,7 +4,6 @@ import ExplorePage from "@/components/ExplorePage";
 import {
   WagmiProvider,
   QueryClientProvider,
-  RainbowKitProvider,
   config,
   QueryClient,
 } from "@/lib/wallet_utils";

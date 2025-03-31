@@ -1,5 +1,3 @@
-import "@rainbow-me/rainbowkit/styles.css";
-import { getDefaultConfig, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import { WagmiProvider } from "wagmi";
 import {
   mainnet,
@@ -21,7 +19,7 @@ import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 //   ssr: true, // If your dApp uses server side rendering (SSR)
 // });
 
-export { QueryClient, WagmiProvider, QueryClientProvider, RainbowKitProvider };
+export { QueryClient, WagmiProvider, QueryClientProvider };
 
 import { http, createConfig } from "wagmi";
 import { metaMask } from "wagmi/connectors";
