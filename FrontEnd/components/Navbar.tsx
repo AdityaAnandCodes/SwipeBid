@@ -1,6 +1,7 @@
 "use client";
 
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+// import { ConnectButton } from "@rainbow-me/rainbowkit";
+import ConnectButton from "./ConnectButton";
 import Link from "next/link";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
@@ -45,7 +46,7 @@ const Navbar = () => {
             </Link>
 
             {/* Connect Button Desktop */}
-            <ConnectWalletButton />
+            <ConnectButton />
           </div>
 
           {/* Mobile Menu Button */}
@@ -85,7 +86,7 @@ const Navbar = () => {
 
               {/* Connect Button Mobile */}
               <div className="pt-2">
-                <ConnectWalletButton />
+                <ConnectButton />
               </div>
             </div>
           </div>
@@ -96,55 +97,55 @@ const Navbar = () => {
 };
 
 // Connect Wallet Button Component
-const ConnectWalletButton = () => {
-  return (
-    <ConnectButton.Custom>
-      {({
-        account,
-        chain,
-        openAccountModal,
-        openChainModal,
-        openConnectModal,
-        mounted,
-      }) => {
-        return (
-          <div>
-            {(() => {
-              if (!mounted || !account || !chain) {
-                return (
-                  <button
-                    onClick={openConnectModal}
-                    className="bg-yellow-500 text-white text-base px-3 py-2 rounded-lg hover:scale-105 transition-all duration-300"
-                  >
-                    Connect Wallet
-                  </button>
-                );
-              }
+// const ConnectWalletButton = () => {
+//   return (
+//     <ConnectButton.Custom>
+//       {({
+//         account,
+//         chain,
+//         openAccountModal,
+//         openChainModal,
+//         openConnectModal,
+//         mounted,
+//       }) => {
+//         return (
+//           <div>
+//             {(() => {
+//               if (!mounted || !account || !chain) {
+//                 return (
+//                   <button
+//                     onClick={openConnectModal}
+//                     className="bg-yellow-500 text-white text-base px-3 py-2 rounded-lg hover:scale-105 transition-all duration-300"
+//                   >
+//                     Connect Wallet
+//                   </button>
+//                 );
+//               }
 
-              // Connected state UI
-              return (
-                <div className="flex gap-4">
-                  <button
-                    onClick={openChainModal}
-                    className="bg-white text-black px-3 py-2 rounded-lg hover:scale-105 transition-all duration-300"
-                  >
-                    {chain.name}
-                  </button>
+//               // Connected state UI
+//               return (
+//                 <div className="flex gap-4">
+//                   <button
+//                     onClick={openChainModal}
+//                     className="bg-white text-black px-3 py-2 rounded-lg hover:scale-105 transition-all duration-300"
+//                   >
+//                     {chain.name}
+//                   </button>
 
-                  <button
-                    onClick={openAccountModal}
-                    className="bg-white text-black px-3 py-2 rounded-lg hover:scale-105 transition-all duration-300"
-                  >
-                    {account.displayName}
-                  </button>
-                </div>
-              );
-            })()}
-          </div>
-        );
-      }}
-    </ConnectButton.Custom>
-  );
-};
+//                   <button
+//                     onClick={openAccountModal}
+//                     className="bg-white text-black px-3 py-2 rounded-lg hover:scale-105 transition-all duration-300"
+//                   >
+//                     {account.displayName}
+//                   </button>
+//                 </div>
+//               );
+//             })()}
+//           </div>
+//         );
+//       }}
+//     </ConnectButton.Custom>
+//   );
+// };
 
 export default Navbar;

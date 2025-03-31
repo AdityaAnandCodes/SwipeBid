@@ -14,7 +14,7 @@ import {
 } from "wagmi/chains";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 
-const config = getDefaultConfig({
+const config1 = getDefaultConfig({
   appName: "SwipeBid",
   projectId: "18c1e26594a664a3ae0618730927fada",
   chains: [lineaSepolia],
@@ -22,9 +22,28 @@ const config = getDefaultConfig({
 });
 
 export {
-  config,
+  config1,
   QueryClient,
   WagmiProvider,
   QueryClientProvider,
   RainbowKitProvider,
 };
+
+import { http, createConfig } from "wagmi";
+import { metaMask } from "wagmi/connectors";
+
+// Create the Wagmi config with MetaMask connector
+const config = createConfig({
+  ssr: true,
+  chains: [lineaSepolia],
+  connectors: [metaMask()],
+  transports: {
+    [lineaSepolia.id]: http(),
+  },
+});
+
+// Create a new QueryClient
+const queryClient = new QueryClient();
+
+// Export everything needed
+export { config, queryClient };
