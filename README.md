@@ -27,7 +27,7 @@ SwipeBid is an innovative NFT marketplace that introduces a Tinder-like swiping 
 
 ### Prerequisites
 - Node.js & npm/yarn
-- MetaMask or any Web3-enabled wallet
+- MetaMask wallet
 - Access to the Linea Blockchain testnet/mainnet
 
 ### Installation
