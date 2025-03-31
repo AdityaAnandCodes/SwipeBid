@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   useAccount,
   useConnect,
@@ -8,16 +8,71 @@ import {
   useChains,
   useSwitchChain,
 } from "wagmi";
+import {
+  Wallet,
+  Copy,
+  ExternalLink,
+  ChevronDown,
+  Network,
+  Check,
+  LogOut,
+  Loader2,
+  AlertCircle,
+  LinkIcon,
+} from "lucide-react";
+import MetaMaskLogo from "./MetaMaskLogo";
 
 export default function ConnectButton() {
   const { address, isConnected } = useAccount();
-  const { connectors, connect, isPending } = useConnect();
+  const { connectors, connect, isPending, error } = useConnect();
   const { disconnect } = useDisconnect();
   const chainId = useChainId();
   const chains = useChains();
-  const { switchChain } = useSwitchChain();
+  const { switchChain, isPending: isSwitchingChain } = useSwitchChain();
   const [isAddressMenuOpen, setIsAddressMenuOpen] = useState(false);
   const [isNetworkMenuOpen, setIsNetworkMenuOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  // Find the current network details
+  const currentNetwork = chains.find((chain) => chain.id === chainId);
+
+  // Handle click outside to close dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isAddressMenuOpen || isNetworkMenuOpen) {
+        const target = event.target as Node;
+        if (
+          target instanceof Element &&
+          !target.closest(".dropdown-container")
+        ) {
+          setIsAddressMenuOpen(false);
+          setIsNetworkMenuOpen(false);
+        }
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isAddressMenuOpen, isNetworkMenuOpen]);
+
+  // Copy address to clipboard
+  const copyAddress = () => {
+    if (address) {
+      navigator.clipboard.writeText(address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  // Open explorer in new tab
+  const openExplorer = () => {
+    if (address && currentNetwork?.blockExplorers?.default?.url) {
+      window.open(
+        `${currentNetwork.blockExplorers.default.url}/address/${address}`,
+        "_blank"
+      );
+    }
+  };
 
   const toggleAddressMenu = () => {
     setIsAddressMenuOpen(!isAddressMenuOpen);
@@ -29,51 +84,135 @@ export default function ConnectButton() {
     setIsAddressMenuOpen(false);
   };
 
+  // Network icon color mapping
+  const getNetworkColor = (chainId: number): string => {
+    const networkColors: Record<number, string> = {
+      1: "#627EEA", // Ethereum
+      137: "#8247E5", // Polygon
+      56: "#F3BA2F", // BSC
+      42161: "#2D374B", // Arbitrum
+      10: "#FF0420", // Optimism
+      43114: "#E84142", // Avalanche
+    };
+
+    return networkColors[chainId] || "#888888";
+  };
+
   if (isConnected) {
     return (
-      <div className="flex space-x-2">
+      <div className="flex space-x-3">
         {/* Network Dropdown */}
-        <div className="relative">
+        <div className="relative dropdown-container">
           <button
             onClick={toggleNetworkMenu}
-            className="px-4 py-2 bg-white text-black font-medium rounded-lg"
+            className="flex items-center px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-lg transition-all duration-300 hover:shadow-md"
+            style={{ borderLeft: `4px solid ${getNetworkColor(chainId)}` }}
           >
-            Connected Network
+            <Network
+              size={18}
+              className="mr-2"
+              color={getNetworkColor(chainId)}
+            />
+            <span>{currentNetwork?.name || "Unknown Network"}</span>
+            <ChevronDown
+              size={16}
+              className={`ml-2 transition-transform duration-300 ${
+                isNetworkMenuOpen ? "rotate-180" : ""
+              }`}
+            />
           </button>
+
           {isNetworkMenuOpen && (
-            <div className="absolute mt-2 w-40 bg-white shadow-lg rounded-lg">
-              {chains.map((chain) => (
-                <button
-                  key={chain.id}
-                  onClick={() => {
-                    switchChain({ chainId: chain.id });
-                    setIsNetworkMenuOpen(false);
-                  }}
-                  className="block w-full text-center px-4 py-2 rounded-lg text-gray-800 hover:bg-gray-100 transition-all duration-300"
-                >
-                  {chain.name}
-                </button>
-              ))}
+            <div className="absolute z-10 right-0 mt-2 w-60 bg-gray-800 shadow-xl rounded-lg border border-gray-700 overflow-hidden animate-in fade-in slide-in-from-top-5 duration-300">
+              <div className="p-2 border-b border-gray-700 text-sm text-gray-400">
+                Select Network
+              </div>
+              <div className="max-h-64 overflow-y-auto py-1">
+                {chains.map((chain) => (
+                  <button
+                    key={chain.id}
+                    onClick={() => {
+                      switchChain({ chainId: chain.id });
+                      setIsNetworkMenuOpen(false);
+                    }}
+                    disabled={isSwitchingChain}
+                    className="flex items-center justify-between w-full px-4 py-3 text-left text-gray-200 hover:bg-gray-700 transition-colors"
+                  >
+                    <div className="flex items-center">
+                      <div
+                        className="w-3 h-3 rounded-full mr-3"
+                        style={{ backgroundColor: getNetworkColor(chain.id) }}
+                      ></div>
+                      <span>{chain.name}</span>
+                    </div>
+                    {chainId === chain.id && (
+                      <Check size={16} className="text-green-500" />
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>
 
         {/* Address Dropdown */}
-        <div className="relative">
+        <div className="relative dropdown-container">
           <button
             onClick={toggleAddressMenu}
-            className="px-4 py-2 bg-white text-black font-medium rounded-lg"
+            className="flex items-center px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-lg transition-all duration-300 hover:shadow-md"
           >
-            {address?.slice(0, 5)}...{address?.slice(-4, address.length)}
+            <Wallet size={18} className="mr-2" />
+            <span className="font-mono">
+              {address?.slice(0, 5)}...{address?.slice(-4)}
+            </span>
+            <ChevronDown
+              size={16}
+              className={`ml-2 transition-transform duration-300 ${
+                isAddressMenuOpen ? "rotate-180" : ""
+              }`}
+            />
           </button>
+
           {isAddressMenuOpen && (
-            <div className="absolute mt-2 w-32 bg-white shadow-lg rounded-lg">
-              <button
-                onClick={() => disconnect()}
-                className="block w-full px-4 py-2 text-center bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-300"
-              >
-                Disconnect
-              </button>
+            <div className="absolute z-10 right-0 mt-2 w-64 bg-gray-800 shadow-xl rounded-lg border border-gray-700 overflow-hidden animate-in fade-in slide-in-from-top-5 duration-300">
+              <div className="p-3 border-b border-gray-700">
+                <div className="text-sm text-gray-400">Connected Wallet</div>
+                <div className="font-mono text-white mt-1 break-all">
+                  {address}
+                </div>
+              </div>
+
+              <div className="p-2">
+                <button
+                  onClick={copyAddress}
+                  className="flex w-full items-center px-3 py-2 text-gray-200 hover:bg-gray-700 rounded-md transition-colors"
+                >
+                  {copied ? (
+                    <Check size={16} className="mr-2 text-green-500" />
+                  ) : (
+                    <Copy size={16} className="mr-2" />
+                  )}
+                  {copied ? "Address Copied!" : "Copy Address"}
+                </button>
+
+                {currentNetwork?.blockExplorers?.default && (
+                  <button
+                    onClick={openExplorer}
+                    className="flex w-full items-center px-3 py-2 text-gray-200 hover:bg-gray-700 rounded-md transition-colors"
+                  >
+                    <ExternalLink size={16} className="mr-2" />
+                    View on {currentNetwork.blockExplorers.default.name}
+                  </button>
+                )}
+
+                <button
+                  onClick={() => disconnect()}
+                  className="flex w-full items-center px-3 py-2 mt-2 text-red-400 hover:bg-red-900/30 hover:text-red-300 rounded-md transition-colors"
+                >
+                  <LogOut size={16} className="mr-2" />
+                  Disconnect Wallet
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -82,20 +221,54 @@ export default function ConnectButton() {
   }
 
   return (
-    <div className="flex flex-col items-center space-y-2">
-      {connectors.map(
-        (connector) =>
-          connector.name === "MetaMask" && (
-            <button
-              key={connector.uid}
-              onClick={() => connect({ connector })}
-              disabled={isPending}
-              className="bg-yellow-300 text-white text-base px-3 py-2 hover:scale-105 duration-300 font-semibold rounded-lg hover:bg-yellow-400 transition disabled:opacity-50"
-            >
-              {isPending ? "Connecting..." : `Connect ${connector.name}`}
-            </button>
-          )
+    <div className="flex flex-col items-center space-y-3">
+      {error && (
+        <div className="flex items-center text-red-500 text-sm mb-2 bg-red-100 px-3 py-2 rounded-md">
+          <AlertCircle size={16} className="mr-2" />
+          {error.message.replace(/\.$/, "")}
+        </div>
       )}
+
+      <div className="flex gap-2">
+        {connectors.map(
+          (connector) =>
+            connector.name === "MetaMask" && (
+              <button
+                key={connector.uid}
+                onClick={() => connect({ connector })}
+                disabled={isPending}
+                className={`relative flex items-center justify-center gap-5 px-4 py-2 
+              ${
+                connector.name === "MetaMask"
+                  ? "bg-gray-700 hover:bg-orange-400"
+                  : "bg-blue-600 hover:bg-blue-700"
+              } 
+              text-white font-medium rounded-lg transition-all duration-300 
+              hover:shadow-lg  hover:scale-105 active:scale-95 disabled:opacity-70 disabled:scale-100 disabled:hover:shadow-none disabled:cursor-not-allowed
+              overflow-hidden group`}
+              >
+                {isPending ? (
+                  <div className="flex items-center">
+                    <Loader2 size={18} className="mr-2 animate-spin" />
+                    <span>Connecting...</span>
+                  </div>
+                ) : (
+                  <>
+                    <span className="flex items-center">
+                      {connector.name === "MetaMask" ? (
+                        <MetaMaskLogo className="w-6 h-6 mr-2" />
+                      ) : (
+                        <LinkIcon size={18} className="mr-2" />
+                      )}
+                      Connect {connector.name}
+                    </span>
+                    <div className="absolute top-0 -inset-full h-full w-1/2 z-5 block transform -skew-x-12 bg-gradient-to-r from-transparent to-white opacity-20 group-hover:animate-shine" />
+                  </>
+                )}
+              </button>
+            )
+        )}
+      </div>
     </div>
   );
 }
