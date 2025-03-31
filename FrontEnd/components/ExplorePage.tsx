@@ -23,7 +23,7 @@ const ExplorePage = () => {
     useState<boolean>(false);
   const [showLoopNotification, setShowLoopNotification] =
     useState<boolean>(false);
-  const ITEMS_PER_PAGE = 12;
+  const ITEMS_PER_PAGE = 50;
 
   const controls = useAnimation();
   const cardRef = useRef<HTMLDivElement>(

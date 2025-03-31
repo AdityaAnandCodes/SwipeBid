@@ -371,14 +371,6 @@ const BidderOwnedNFTsPage = () => {
 
                       <div className="mt-6 grid grid-cols-2 gap-3">
                         <button
-                          onClick={() =>
-                            window.open(`/nft/${nft.tokenId}`, "_blank")
-                          }
-                          className="w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors duration-200 text-white font-medium"
-                        >
-                          View Details
-                        </button>
-                        <button
                           onClick={() => addNFTToWallet(nft)}
                           className="w-full py-3 rounded-lg bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800 transition-colors duration-200 text-white font-medium flex items-center justify-center gap-2"
                           disabled={isAdding}
