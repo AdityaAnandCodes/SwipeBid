@@ -134,7 +134,7 @@ const BiddingPopUp = ({ onClose, nft }: BiddingPopUpProps) => {
     if (nft.highestBid && nft.highestBid > BigInt(0)) {
       try {
         // Add 0.01 ETH to the current highest bid
-        return formatEther(nft.highestBid + parseEther("0.01"));
+        return formatEther(nft.highestBid + parseEther("0.0001"));
       } catch (error) {
         return basePrice; // Fallback to basePrice if formatting fails
       }

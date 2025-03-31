@@ -12,6 +12,7 @@ import {
   useAccount,
   useReadContract,
   useWaitForTransactionReceipt,
+  useConfig,
 } from "wagmi";
 import { formatEther } from "viem";
 
@@ -66,41 +67,19 @@ const fetchMetadata = async (uri: string) => {
   }
 };
 
-const addNFTToMetaMask = async (tokenId: bigint) => {
-  try {
-    if (!window.ethereum) {
-      alert("MetaMask is not installed!");
-      return;
-    }
-
-    const result = await window.ethereum.request({
-      method: "wallet_watchAsset",
-      params: {
-        type: "ERC721",
-        options: {
-          address: ADDRESS, // Your contract address
-          tokenId: tokenId.toString(),
-        },
-      },
-    });
-
-    if (result) {
-      alert("NFT successfully added to wallet!");
-    }
-  } catch (error) {
-    console.error("Error adding NFT to MetaMask:", error);
-    alert("Failed to add NFT to wallet");
-  }
-};
-
 const BidderOwnedNFTsPage = () => {
   const [ownedNFTs, setOwnedNFTs] = useState<NFTListing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [metadata, setMetadata] = useState<
     Record<string, { image: string; description: string }>
   >({});
+  const [addingToWallet, setAddingToWallet] = useState<Record<string, boolean>>(
+    {}
+  );
+  const [addStatus, setAddStatus] = useState<Record<string, string>>({});
 
-  const { address } = useAccount();
+  const { address, isConnected, connector } = useAccount();
+  const config = useConfig();
 
   // Get won NFTs
   const { data: wonNFTsData, refetch: refetchWonNFTs } = useReadContract({
@@ -186,7 +165,61 @@ const BidderOwnedNFTsPage = () => {
     return nft.description || "No description available";
   };
 
-  if (!address) {
+  // Function to add NFT to wallet using wagmi
+  // Function to add NFT to wallet using wagmi
+  const addNFTToWallet = async (nft: NFTListing) => {
+    const tokenId = nft.tokenId.toString();
+    try {
+      setAddingToWallet((prev) => ({ ...prev, [tokenId]: true }));
+      setAddStatus((prev) => ({ ...prev, [tokenId]: "Adding..." }));
+      if (!connector) {
+        throw new Error("No wallet connector found");
+      }
+      // Get the connector's provider
+      const provider = await connector.getProvider();
+      // Check if the provider has the watchAsset method (MetaMask-like)
+      if (provider && typeof provider === "object" && "request" in provider) {
+        await (provider as { request: (args: any) => Promise<any> }).request({
+          method: "wallet_watchAsset",
+          params: {
+            type: "ERC721",
+            options: {
+              address: ADDRESS,
+              tokenId: tokenId,
+              image: getImageUrl(nft),
+              name: nft.name,
+            },
+          },
+        });
+        setAddStatus((prev) => ({ ...prev, [tokenId]: "Added successfully!" }));
+        // Reset status after a delay
+        setTimeout(() => {
+          setAddStatus((prev) => {
+            const newStatus = { ...prev };
+            delete newStatus[tokenId];
+            return newStatus;
+          });
+        }, 3000);
+      } else {
+        throw new Error("Current wallet does not support adding NFTs");
+      }
+    } catch (error) {
+      console.error("Error adding NFT to wallet:", error);
+      setAddStatus((prev) => ({ ...prev, [tokenId]: "Failed to add" }));
+      // Reset error status after a delay
+      setTimeout(() => {
+        setAddStatus((prev) => {
+          const newStatus = { ...prev };
+          delete newStatus[tokenId];
+          return newStatus;
+        });
+      }, 3000);
+    } finally {
+      setAddingToWallet((prev) => ({ ...prev, [tokenId]: false }));
+    }
+  };
+
+  if (!isConnected || !address) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white flex flex-col items-center justify-center p-4">
         <div className="bg-gray-800 p-8 rounded-2xl shadow-2xl border border-gray-700 max-w-lg w-full">
@@ -279,76 +312,100 @@ const BidderOwnedNFTsPage = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {ownedNFTs.map((nft) => (
-                <div
-                  key={nft.tokenId.toString()}
-                  className="bg-gray-800/50 rounded-2xl overflow-hidden border border-gray-700 hover:border-green-500 transition-all duration-200 shadow-lg hover:shadow-green-900/20 hover:translate-y-[-4px] group"
-                >
-                  <div className="relative aspect-square overflow-hidden">
-                    <img
-                      src={getImageUrl(nft)}
-                      alt={nft.name}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      onError={(e) => {
-                        // Fallback image if loading fails
-                        (e.target as HTMLImageElement).src =
-                          "/default-image.png";
-                      }}
-                    />
+              {ownedNFTs.map((nft) => {
+                const tokenId = nft.tokenId.toString();
+                const isAdding = addingToWallet[tokenId];
+                const status = addStatus[tokenId];
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent opacity-60"></div>
-                    <div className="absolute top-3 left-3 bg-black bg-opacity-70 px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm">
-                      #{nft.tokenId.toString()}
-                    </div>
-                    <div className="absolute top-3 right-3 bg-gradient-to-r from-green-600 to-emerald-700 px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm">
-                      {formatEther(nft.highestBid)} ETH
-                    </div>
-                  </div>
+                return (
+                  <div
+                    key={tokenId}
+                    className="bg-gray-800/50 rounded-2xl overflow-hidden border border-gray-700 hover:border-green-500 transition-all duration-200 shadow-lg hover:shadow-green-900/20 hover:translate-y-[-4px] group"
+                  >
+                    <div className="relative aspect-square overflow-hidden">
+                      <img
+                        src={getImageUrl(nft)}
+                        alt={nft.name}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        onError={(e) => {
+                          // Fallback image if loading fails
+                          (e.target as HTMLImageElement).src =
+                            "/default-image.png";
+                        }}
+                      />
 
-                  <div className="p-5">
-                    <h3 className="font-bold text-lg truncate group-hover:text-green-400 transition-colors">
-                      {nft.name}
-                    </h3>
-                    <p className="mt-2 text-sm text-gray-300 h-12 overflow-hidden line-clamp-2">
-                      {getDescription(nft)}
-                    </p>
-
-                    <div className="mt-4 space-y-3 pt-4 border-t border-gray-700">
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-400">Won Price: </span>
-                        <span className="font-medium bg-gray-700 px-2 py-1 rounded">
-                          {formatEther(nft.highestBid)} ETH
-                        </span>
+                      <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent opacity-60"></div>
+                      <div className="absolute top-3 left-3 bg-black bg-opacity-70 px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm">
+                        #{tokenId}
                       </div>
-
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-400">Original Seller:</span>
-                        <span className="font-medium bg-gray-700 px-2 py-1 rounded">
-                          {formatAddress(nft.seller)}
-                        </span>
+                      <div className="absolute top-3 right-3 bg-gradient-to-r from-green-600 to-emerald-700 px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm">
+                        {formatEther(nft.highestBid)} ETH
                       </div>
                     </div>
 
-                    <div className="mt-6 grid grid-cols-2 gap-3">
-                      <button
-                        onClick={() =>
-                          window.open(`/nft/${nft.tokenId}`, "_blank")
-                        }
-                        className="w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors duration-200 text-white font-medium"
-                      >
-                        View Details
-                      </button>
-                      <button
-                        onClick={() => addNFTToMetaMask(nft.tokenId)}
-                        className="w-full py-3 rounded-lg bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800 transition-colors duration-200 text-white font-medium flex items-center justify-center gap-2"
-                      >
-                        <PlusCircle size={20} />
-                        Add to Wallet
-                      </button>
+                    <div className="p-5">
+                      <h3 className="font-bold text-lg truncate group-hover:text-green-400 transition-colors">
+                        {nft.name}
+                      </h3>
+                      <p className="mt-2 text-sm text-gray-300 h-12 overflow-hidden line-clamp-2">
+                        {getDescription(nft)}
+                      </p>
+
+                      <div className="mt-4 space-y-3 pt-4 border-t border-gray-700">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-400">Won Price: </span>
+                          <span className="font-medium bg-gray-700 px-2 py-1 rounded">
+                            {formatEther(nft.highestBid)} ETH
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-400">
+                            Original Seller:
+                          </span>
+                          <span className="font-medium bg-gray-700 px-2 py-1 rounded">
+                            {formatAddress(nft.seller)}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="mt-6 grid grid-cols-2 gap-3">
+                        <button
+                          onClick={() =>
+                            window.open(`/nft/${nft.tokenId}`, "_blank")
+                          }
+                          className="w-full py-3 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors duration-200 text-white font-medium"
+                        >
+                          View Details
+                        </button>
+                        <button
+                          onClick={() => addNFTToWallet(nft)}
+                          className="w-full py-3 rounded-lg bg-gradient-to-r from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800 transition-colors duration-200 text-white font-medium flex items-center justify-center gap-2"
+                          disabled={isAdding}
+                        >
+                          <PlusCircle size={20} />
+                          {isAdding ? "Adding..." : "Add to Wallet"}
+                        </button>
+                      </div>
+
+                      {/* Status message */}
+                      {status && (
+                        <div
+                          className={`mt-3 text-xs text-center ${
+                            status === "Added successfully!"
+                              ? "text-green-500"
+                              : status === "Failed to add"
+                              ? "text-red-500"
+                              : "text-yellow-500"
+                          }`}
+                        >
+                          {status}
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
