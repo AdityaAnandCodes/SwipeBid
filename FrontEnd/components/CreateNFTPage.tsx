@@ -80,10 +80,11 @@ export default function CreateNFTPage({
   } = useWriteContract();
 
   // Only call this hook if hash exists
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = hash
-    ? useWaitForTransactionReceipt({ hash })
-    : { isLoading: false, isSuccess: false };
-
+  // Always call the hook, but with a conditional parameter
+  const { isLoading: isConfirming, isSuccess: isConfirmed } =
+    useWaitForTransactionReceipt({
+      hash: hash || undefined,
+    });
   const {
     register,
     formState: { errors },
@@ -104,7 +105,7 @@ export default function CreateNFTPage({
   // Initialize dropzone
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
-      "image/*": [".png", ".jpg", ".jpeg", ".gif" ,".avif"],
+      "image/*": [".png", ".jpg", ".jpeg", ".gif", ".avif"],
     },
     maxSize: 50 * 1024 * 1024,
     onDrop: (acceptedFiles) => {
@@ -291,7 +292,7 @@ export default function CreateNFTPage({
         name: formData.name,
         description: formData.description,
         image: imageUrls.ipfsUrl, // Use IPFS URL in metadata
-        attributes: formData.traits
+        attributes: (formData.traits || [])
           .filter((trait) => trait.trim() !== "")
           .map((trait) => {
             const [key, value] = trait.split(":").map((part) => part.trim());
@@ -323,7 +324,7 @@ export default function CreateNFTPage({
           formData.name,
           formData.description,
           metadataUrls.ipfsUrl,
-          formData.traits.filter((t) => t.trim() !== ""),
+          (formData.traits || []).filter((t) => t.trim() !== ""),
           priceInWei,
         ],
       });
@@ -613,7 +614,6 @@ export default function CreateNFTPage({
                 {/* Transaction Status */}
                 {hash && (
                   <div className="text-green-400 p-4 bg-green-400/10 rounded-lg">
-                    <p>Transaction Hash: {hash.toString()}</p>
                     {isConfirming && <div>Waiting for confirmation...</div>}
                     {isConfirmed && <div>NFT created successfully!</div>}
                   </div>
