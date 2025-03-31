@@ -255,7 +255,7 @@ export default function CreateNFTPage({
   const connectWallet = async () => {
     try {
       // Find the first available connector (likely MetaMask)
-      const connector = connectors[0];
+      const connector = connectors?.[0];
       if (connector) {
         connect({ connector });
       } else {
