@@ -243,7 +243,7 @@ export default function CreateNFTPage({
   // Initialize dropzone
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
-      "image/*": [".png", ".jpg", ".jpeg", ".gif", ".avif"],
+      "image/*": [".png", ".jpg", ".jpeg", ".gif", ".avif", ".heic"],
     },
     maxSize: 50 * 1024 * 1024,
     onDrop: (acceptedFiles) => {
